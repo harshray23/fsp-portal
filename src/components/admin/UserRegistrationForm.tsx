@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,15 +44,29 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<UserRegistrationFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const getInitialValues = () => {
+    if (mode === 'admin') {
+      return {
+        name: "Harsh Ray",
+        email: "harshray2007@gmail.com",
+        role: mode,
+        department: "CSE(AIML)", // Will be in form state, though field might be hidden for admin
+        password: "Harsh@2007",
+      };
+    }
+    // For teacher mode, or any other case, use existing defaults
+    return {
       name: "",
       email: "",
       role: mode,
       department: "",
       password: "",
-    },
+    };
+  };
+
+  const form = useForm<UserRegistrationFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: getInitialValues(),
   });
   
   const selectedRole = form.watch("role");
@@ -67,8 +82,8 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
       title: "User Registered",
       description: `${values.name} (${values.role}) has been successfully registered.`,
     });
-    form.reset();
-    form.setValue("role", mode); // Reset role to initial mode
+    // Reset to initial default values based on mode after submission
+    form.reset(getInitialValues());
   }
 
   return (
@@ -108,7 +123,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={true}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={true}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a role" />

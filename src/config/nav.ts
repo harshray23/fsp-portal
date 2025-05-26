@@ -1,5 +1,6 @@
+
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Users, CalendarDays, UserPlus, FileText, CheckSquare, BookUser, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, UserPlus, FileText, CheckSquare, BookUser, Settings, UserCircle } from 'lucide-react'; // Added UserCircle
 
 export interface NavItem {
   title: string;
@@ -28,9 +29,9 @@ export const studentNavItems: NavItem[] = [
     icon: CheckSquare,
   },
    {
-    title: 'Settings',
+    title: 'Profile', // Renamed from Settings
     href: '/student/dashboard/settings',
-    icon: Settings,
+    icon: UserCircle, // Changed icon
   },
 ];
 
@@ -61,9 +62,9 @@ export const teacherNavItems: NavItem[] = [
     icon: FileText,
   },
   {
-    title: 'Settings',
+    title: 'Profile', // Renamed from Settings
     href: '/teacher/dashboard/settings',
-    icon: Settings,
+    icon: UserCircle, // Changed icon
   },
 ];
 
@@ -87,15 +88,15 @@ export const adminNavItems: NavItem[] = [
     title: 'Register User',
     href: '/admin/dashboard/register-user',
     icon: UserPlus,
-    items: [ // Example of sub-menu
+    items: [ 
         { title: 'Register Admin', href: '/admin/dashboard/register-user/admin', icon: UserPlus },
         { title: 'Register Teacher', href: '/admin/dashboard/register-user/teacher', icon: UserPlus },
     ]
   },
    {
-    title: 'Settings',
+    title: 'Profile', // Renamed from Settings
     href: '/admin/dashboard/settings',
-    icon: Settings,
+    icon: UserCircle, // Changed icon
   },
 ];
 

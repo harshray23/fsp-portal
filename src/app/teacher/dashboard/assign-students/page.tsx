@@ -1,3 +1,4 @@
+
 "use client";
 
 import { PageHeader } from '@/components/common/PageHeader';
@@ -12,28 +13,16 @@ import { useState } from 'react';
 import { UserPlus, Search, ArrowRightLeft, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data
-const mockStudents = [
-  { id: "S001", name: "Amit Kumar", roll: "CSE/20/01", currentBatch: null },
-  { id: "S002", name: "Priya Sharma", roll: "ECE/20/05", currentBatch: "FSP-ECE-B1" },
-  { id: "S003", name: "Rajesh Singh", roll: "ME/20/12", currentBatch: null },
-  { id: "S004", name: "Sunita Devi", roll: "IT/20/03", currentBatch: "FSP-IT-A1" },
-  { id: "S005", name: "Vikram Rathod", roll: "CSE/20/02", currentBatch: null },
-];
-
-const mockBatches = [
-  { id: "FSP-CSE-A1", name: "Computer Science - Batch A1" },
-  { id: "FSP-ECE-B1", name: "Electronics - Batch B1" },
-  { id: "FSP-IT-A1", name: "Info Tech - Batch A1" },
-  { id: "FSP-MECH-C1", name: "Mechanical - Batch C1" },
-];
+// Mock data cleared
+const mockStudents: any[] = [];
+const mockBatches: any[] = [];
 
 export default function AssignStudentsPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
-  const [students, setStudents] = useState(mockStudents); // To simulate updates
+  const [students, setStudents] = useState(mockStudents); // Initialize with empty mockStudents
 
   const filteredStudents = students.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -113,7 +102,7 @@ export default function AssignStudentsPage() {
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">No students found.</TableCell>
+                    <TableCell colSpan={4} className="text-center h-24">No students found. Register students or adjust search.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -134,9 +123,13 @@ export default function AssignStudentsPage() {
                   <SelectValue placeholder="Select a batch" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockBatches.map(batch => (
-                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                  ))}
+                  {mockBatches.length === 0 ? (
+                    <SelectItem value="no-batches" disabled>No batches available</SelectItem>
+                  ) : (
+                    mockBatches.map(batch => (
+                      <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -146,7 +139,7 @@ export default function AssignStudentsPage() {
                 <span>{selectedStudents.length} student(s) selected.</span>
               </div>
             </div>
-            <Button onClick={handleAssignBatch} className="w-full" disabled={!selectedBatch || selectedStudents.length === 0}>
+            <Button onClick={handleAssignBatch} className="w-full" disabled={!selectedBatch || selectedStudents.length === 0 || mockBatches.length === 0}>
               <ArrowRightLeft className="mr-2 h-4 w-4" /> Assign to Batch
             </Button>
           </CardContent>

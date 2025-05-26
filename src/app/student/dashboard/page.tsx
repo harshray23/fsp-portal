@@ -3,20 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BookOpenCheck, Percent } from 'lucide-react';
 import Link from 'next/link';
 
-// Mock data - replace with actual data fetching
+// Mock data - cleared or set to default state
 const studentData = {
-  name: "Amit Sharma",
-  batch: "FSP-CSE-2024-A1",
-  attendanceOverall: "92%",
-  subjects: [
-    { name: "Advanced Java Programming", attendance: "95%", lastClass: "2024-07-28" },
-    { name: "Web Technologies", attendance: "90%", lastClass: "2024-07-29" },
-    { name: "Aptitude & Reasoning", attendance: "88%", lastClass: "2024-07-27" },
-  ],
-  upcomingClasses: [
-    { subject: "Advanced Java Programming", time: "Tomorrow, 10:00 AM", room: "CL-05" },
-    { subject: "Aptitude & Reasoning", time: "Tomorrow, 02:00 PM", room: "TR-02" },
-  ]
+  name: "Student User", // Generic name
+  batch: "N/A",
+  attendanceOverall: "N/A",
+  subjects: [],
+  upcomingClasses: []
 };
 
 export default function StudentDashboardPage() {
@@ -32,9 +25,13 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{studentData.batch}</div>
-            <p className="text-xs text-muted-foreground">
-              Assigned to Computer Science FSP Batch
-            </p>
+            {studentData.batch === "N/A" ? (
+              <p className="text-xs text-muted-foreground">Not assigned to any batch.</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Assigned to Finishing School Program Batch
+              </p>
+            )}
             <Link href="/student/dashboard/batch" className="text-sm text-primary hover:underline mt-2 block">View Details</Link>
           </CardContent>
         </Card>
@@ -46,9 +43,13 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{studentData.attendanceOverall}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all FSP subjects
-            </p>
+             {studentData.attendanceOverall === "N/A" ? (
+                <p className="text-xs text-muted-foreground">No attendance data available.</p>
+             ) : (
+                <p className="text-xs text-muted-foreground">
+                    Across all FSP subjects
+                </p>
+             )}
             <Link href="/student/dashboard/attendance" className="text-sm text-primary hover:underline mt-2 block">View Detailed Report</Link>
           </CardContent>
         </Card>
@@ -61,17 +62,21 @@ export default function StudentDashboardPage() {
             <CardDescription>Your attendance percentage in each subject.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-3">
-              {studentData.subjects.map((subject) => (
-                <li key={subject.name} className="flex justify-between items-center p-3 bg-secondary/50 rounded-md">
-                  <div>
-                    <p className="font-medium">{subject.name}</p>
-                    <p className="text-xs text-muted-foreground">Last class: {subject.lastClass}</p>
-                  </div>
-                  <span className="font-semibold text-lg text-primary">{subject.attendance}</span>
-                </li>
-              ))}
-            </ul>
+            {studentData.subjects.length > 0 ? (
+              <ul className="space-y-3">
+                {studentData.subjects.map((subject: any) => (
+                  <li key={subject.name} className="flex justify-between items-center p-3 bg-secondary/50 rounded-md">
+                    <div>
+                      <p className="font-medium">{subject.name}</p>
+                      <p className="text-xs text-muted-foreground">Last class: {subject.lastClass}</p>
+                    </div>
+                    <span className="font-semibold text-lg text-primary">{subject.attendance}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground">No subject attendance data available.</p>
+            )}
           </CardContent>
         </Card>
         
@@ -83,7 +88,7 @@ export default function StudentDashboardPage() {
           <CardContent>
             {studentData.upcomingClasses.length > 0 ? (
               <ul className="space-y-3">
-                {studentData.upcomingClasses.map((cls) => (
+                {studentData.upcomingClasses.map((cls: any) => (
                   <li key={cls.subject + cls.time} className="p-3 bg-secondary/50 rounded-md">
                     <p className="font-medium">{cls.subject}</p>
                     <p className="text-sm text-muted-foreground">{cls.time} - Room: {cls.room}</p>

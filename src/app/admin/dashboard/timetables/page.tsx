@@ -4,12 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, Eye, PlusCircle } from 'lucide-react';
 
-// Mock data
-const timetables = [
-  { id: "TT-CSE-A1", batchId: "FSP-CSE-A1", version: "v2.1", lastUpdated: "2024-07-25", status: "Active" },
-  { id: "TT-ECE-B2", batchId: "FSP-ECE-B2", version: "v1.0", lastUpdated: "2024-07-20", status: "Active" },
-  { id: "TT-MECH-A1", batchId: "FSP-MECH-A1", version: "v0.9", lastUpdated: "2024-07-15", status: "Draft" },
-];
+// Mock data cleared
+const timetables: any[] = [];
 
 export default function AdminTimetablesPage() {
   return (
@@ -38,23 +34,31 @@ export default function AdminTimetablesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {timetables.map((tt) => (
-                <TableRow key={tt.id}>
-                  <TableCell className="font-medium">{tt.id}</TableCell>
-                  <TableCell>{tt.batchId}</TableCell>
-                  <TableCell>{tt.version}</TableCell>
-                  <TableCell>{new Date(tt.lastUpdated).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-center">{tt.status}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="mr-1">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Download className="h-4 w-4" />
-                    </Button>
+              {timetables.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No timetables found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                timetables.map((tt) => (
+                  <TableRow key={tt.id}>
+                    <TableCell className="font-medium">{tt.id}</TableCell>
+                    <TableCell>{tt.batchId}</TableCell>
+                    <TableCell>{tt.version}</TableCell>
+                    <TableCell>{new Date(tt.lastUpdated).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-center">{tt.status}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" className="mr-1">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
            <p className="text-sm text-muted-foreground mt-4">This is a placeholder view. Actual timetable management would be more complex.</p>

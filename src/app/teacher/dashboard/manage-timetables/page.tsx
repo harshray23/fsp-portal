@@ -1,16 +1,12 @@
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, Edit, Trash2, Eye } from 'lucide-react';
-import { AIConflictChecker } from '@/components/teacher/AIConflictChecker'; // AI Component
+import { AIConflictChecker } from '@/components/teacher/AIConflictChecker'; 
 
-// Mock data
-const timetables = [
-  { id: "TT001", batch: "FSP-CSE-A1", day: "Monday", time: "09:00-11:00", subject: "Adv Java", room: "CL01", status: "Published" },
-  { id: "TT002", batch: "FSP-CSE-A1", day: "Monday", time: "11:00-13:00", subject: "Web Tech", room: "CL02", status: "Draft" },
-  { id: "TT003", batch: "FSP-ECE-B2", day: "Tuesday", time: "14:00-16:00", subject: "Signals", room: "LAB03", status: "Published" },
-];
+// Mock data cleared
+const timetables: any[] = [];
 
 export default function ManageTimetablesPage() {
   return (
@@ -42,27 +38,28 @@ export default function ManageTimetablesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {timetables.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell className="font-medium">{entry.batch}</TableCell>
-                      <TableCell>{entry.day}</TableCell>
-                      <TableCell>{entry.time}</TableCell>
-                      <TableCell>{entry.subject}</TableCell>
-                      <TableCell>{entry.room}</TableCell>
-                      <TableCell>{entry.status}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="mr-1"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="mr-1"><Edit className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {timetables.length === 0 && (
+                  {timetables.length === 0 ? (
                      <TableRow>
                         <TableCell colSpan={7} className="h-24 text-center">
                         No timetable entries found. Start by adding a new schedule entry.
                         </TableCell>
                     </TableRow>
+                  ) : (
+                    timetables.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="font-medium">{entry.batch}</TableCell>
+                        <TableCell>{entry.day}</TableCell>
+                        <TableCell>{entry.time}</TableCell>
+                        <TableCell>{entry.subject}</TableCell>
+                        <TableCell>{entry.room}</TableCell>
+                        <TableCell>{entry.status}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="mr-1"><Eye className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="mr-1"><Edit className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
@@ -72,7 +69,6 @@ export default function ManageTimetablesPage() {
         
         <div className="lg:col-span-1 space-y-6">
            <AIConflictChecker />
-           {/* Placeholder for a form to add/edit schedule entry - AI checker can inform this form */}
            <Card>
              <CardHeader>
                <CardTitle>Add/Edit Schedule Entry</CardTitle>

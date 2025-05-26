@@ -1,9 +1,9 @@
+
 "use client";
 
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,26 +11,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Save, Users } from 'lucide-react';
+import { CalendarIcon, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data
-const mockClasses = [
-  { id: "CLS001", batch: "FSP-CSE-A1", subject: "Advanced Java", time: "09:00 AM" },
-  { id: "CLS002", batch: "FSP-ECE-B2", subject: "Signals & Systems", time: "11:00 AM" },
-];
-
-const mockStudentsForBatch = { // Simulates fetching students for a selected class
-  "FSP-CSE-A1": [
-    { id: "S001", name: "Amit Kumar", roll: "CSE/20/01" },
-    { id: "S005", name: "Vikram Rathod", roll: "CSE/20/02" },
-  ],
-  "FSP-ECE-B2": [
-    { id: "S002", name: "Priya Sharma", roll: "ECE/20/05" },
-  ],
-};
+// Mock data cleared
+const mockClasses: any[] = [];
+const mockStudentsForBatch: Record<string, any[]> = {};
 
 type Student = { id: string; name: string; roll: string; };
 
@@ -45,12 +33,10 @@ export default function ManageAttendancePage() {
     setSelectedClass(classId);
     const cls = mockClasses.find(c => c.id === classId);
     if (cls) {
-      // @ts-ignore
       const batchStudents = mockStudentsForBatch[cls.batch] || [];
       setStudentsForClass(batchStudents);
-      // Reset attendance for new class
       const initialAttendance: Record<string, boolean> = {};
-      batchStudents.forEach(s => initialAttendance[s.id] = true); // Default all to present
+      batchStudents.forEach(s => initialAttendance[s.id] = true); 
       setAttendance(initialAttendance);
     } else {
       setStudentsForClass([]);
@@ -67,7 +53,6 @@ export default function ManageAttendancePage() {
       toast({ title: "Error", description: "Please select a class with students.", variant: "destructive" });
       return;
     }
-    // Simulate API call
     console.log("Saving attendance:", { date: selectedDate, classId: selectedClass, attendance });
     toast({ title: "Attendance Saved", description: `Attendance for ${mockClasses.find(c=>c.id === selectedClass)?.subject} on ${selectedDate ? format(selectedDate, "PPP") : ""} submitted.` });
   };
@@ -109,16 +94,20 @@ export default function ManageAttendancePage() {
           </div>
           <div>
             <Label htmlFor="class-select">Class</Label>
-            <Select onValueChange={handleClassSelect} value={selectedClass || ""}>
+            <Select onValueChange={handleClassSelect} value={selectedClass || ""} disabled={mockClasses.length === 0}>
               <SelectTrigger id="class-select">
-                <SelectValue placeholder="Select a class session" />
+                <SelectValue placeholder={mockClasses.length === 0 ? "No classes available" : "Select a class session"} />
               </SelectTrigger>
               <SelectContent>
-                {mockClasses.map(cls => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.batch} - {cls.subject} ({cls.time})
-                  </SelectItem>
-                ))}
+                {mockClasses.length === 0 ? (
+                    <SelectItem value="no-classes" disabled>No classes available</SelectItem>
+                ) : (
+                    mockClasses.map(cls => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                        {cls.batch} - {cls.subject} ({cls.time})
+                    </SelectItem>
+                    ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -166,10 +155,22 @@ export default function ManageAttendancePage() {
           </CardFooter>
         </Card>
       )}
-      {selectedClass && studentsForClass.length === 0 && (
+      {selectedClass && studentsForClass.length === 0 && mockClasses.length > 0 && (
         <Card>
           <CardHeader><CardTitle>No Students</CardTitle></CardHeader>
           <CardContent><p className="text-muted-foreground">No students found for the selected class or batch.</p></CardContent>
+        </Card>
+      )}
+       {!selectedClass && mockClasses.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Select a Class</CardTitle></CardHeader>
+          <CardContent><p className="text-muted-foreground">Please select a class to view and mark attendance.</p></CardContent>
+        </Card>
+      )}
+      {mockClasses.length === 0 && (
+         <Card>
+          <CardHeader><CardTitle>No Classes Available</CardTitle></CardHeader>
+          <CardContent><p className="text-muted-foreground">There are no classes scheduled or available to manage attendance for.</p></CardContent>
         </Card>
       )}
     </>

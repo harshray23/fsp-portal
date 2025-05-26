@@ -3,21 +3,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CalendarClock, CheckCircle2, Users, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
-// Mock data
+// Mock data cleared or set to default
 const teacherData = {
-  name: "Ms. Priya Sharma",
-  activeClasses: 3,
-  totalStudents: 180,
+  name: "Teacher User", // Generic name
+  activeClasses: 0,
+  totalStudents: 0,
+  upcomingSession: null, // No upcoming session by default
+  /*
   upcomingSession: {
     subject: "Advanced Java",
     batch: "FSP-CSE-A1",
     time: "Tomorrow, 09:00 AM",
     room: "CL-05",
   },
-  pendingTasks: [
-    { description: "Grade assignments for Web Tech (FSP-IT-C1)", due: "2 days" },
-    { description: "Submit attendance for Aptitude (FSP-ECE-B2) - 29/07", due: "Today" },
-  ]
+  */
+  pendingTasks: [] // No pending tasks by default
 };
 
 export default function TeacherDashboardPage() {
@@ -49,10 +49,12 @@ export default function TeacherDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Attendance Submitted</CardTitle>
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CheckCircle2 className="h-5 w-5 text-muted-foreground" /> 
+            {/* Default to muted, change to green-500 if logic dictates */}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">100%</div>
+            <div className="text-2xl font-bold">N/A</div> 
+            {/* Or 0% if that's more appropriate for no data */}
             <p className="text-xs text-muted-foreground">For yesterday&apos;s classes</p>
              <Link href="/teacher/dashboard/manage-attendance" className="text-xs text-primary hover:underline">View Attendance</Link>
           </CardContent>
@@ -65,10 +67,16 @@ export default function TeacherDashboardPage() {
             <CardTitle>Upcoming Session</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-semibold text-lg">{teacherData.upcomingSession.subject}</p>
-            <p className="text-sm text-muted-foreground">Batch: {teacherData.upcomingSession.batch}</p>
-            <p className="text-sm text-muted-foreground">Time: {teacherData.upcomingSession.time}</p>
-            <p className="text-sm text-muted-foreground">Room: {teacherData.upcomingSession.room}</p>
+            {teacherData.upcomingSession ? (
+              <>
+                <p className="font-semibold text-lg">{teacherData.upcomingSession.subject}</p>
+                <p className="text-sm text-muted-foreground">Batch: {teacherData.upcomingSession.batch}</p>
+                <p className="text-sm text-muted-foreground">Time: {teacherData.upcomingSession.time}</p>
+                <p className="text-sm text-muted-foreground">Room: {teacherData.upcomingSession.room}</p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">No upcoming sessions scheduled.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -80,7 +88,7 @@ export default function TeacherDashboardPage() {
           <CardContent>
             {teacherData.pendingTasks.length > 0 ? (
               <ul className="space-y-3">
-                {teacherData.pendingTasks.map((task, index) => (
+                {teacherData.pendingTasks.map((task: any, index) => (
                   <li key={index} className="flex items-start p-3 bg-secondary/50 rounded-md">
                     <AlertTriangle className="h-5 w-5 mr-3 mt-1 text-accent flex-shrink-0" />
                     <div>
@@ -91,7 +99,7 @@ export default function TeacherDashboardPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-muted-foreground">No pending tasks. Well done!</p>
+              <p className="text-muted-foreground">No pending tasks.</p>
             )}
           </CardContent>
         </Card>

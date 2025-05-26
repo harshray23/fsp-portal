@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CalendarDays, UserPlus, Activity } from 'lucide-react';
 import Link from 'next/link';
 
-// Mock data for dashboard overview
+// Updated admin stats to reflect a clean system
 const adminStats = {
-  totalStudents: 1250,
-  activeBatches: 15,
-  totalTeachers: 45,
-  pendingRegistrations: 3,
+  totalStudents: 0,
+  activeBatches: 0,
+  totalTeachers: 0,
+  pendingRegistrations: 0,
 };
 
 export default function AdminDashboardPage() {
@@ -65,21 +65,7 @@ export default function AdminDashboardPage() {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-center text-sm">
-                <Activity className="h-4 w-4 mr-2 text-green-500" />
-                New batch "FSP-MECH-2024-B1" created by Admin User. (2 hours ago)
-              </li>
-              <li className="flex items-center text-sm">
-                <UserPlus className="h-4 w-4 mr-2 text-blue-500" />
-                Teacher "Prof. R. Sharma" registered. (5 hours ago)
-              </li>
-              <li className="flex items-center text-sm">
-                <CalendarDays className="h-4 w-4 mr-2 text-purple-500" />
-                Timetable updated for "FSP-ECE-2024-A2". (1 day ago)
-              </li>
-            </ul>
-             <p className="text-sm text-muted-foreground mt-4">This is a placeholder for recent system activities.</p>
+             <p className="text-sm text-muted-foreground mt-4">No recent activity to display.</p>
           </CardContent>
         </Card>
       </div>

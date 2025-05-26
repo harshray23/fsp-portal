@@ -5,13 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 
-// Mock data
-const batches = [
-  { id: "FSP-CSE-A1", name: "Computer Science - Batch A1", students: 60, status: "Active", coordinator: "Dr. S. Sen" },
-  { id: "FSP-ECE-B2", name: "Electronics - Batch B2", students: 55, status: "Active", coordinator: "Prof. M. Ali" },
-  { id: "FSP-MECH-A1", name: "Mechanical - Batch A1", students: 62, status: "Upcoming", coordinator: "Dr. P. Ghosh" },
-  { id: "FSP-IT-C1", name: "Information Technology - Batch C1", students: 58, status: "Finished", coordinator: "Prof. A. Kaur" },
-];
+// Mock data cleared
+const batches: any[] = [];
 
 export default function AdminBatchesPage() {
   return (
@@ -40,27 +35,35 @@ export default function AdminBatchesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {batches.map((batch) => (
-                <TableRow key={batch.id}>
-                  <TableCell className="font-medium">{batch.id}</TableCell>
-                  <TableCell>{batch.name}</TableCell>
-                  <TableCell className="text-center">{batch.students}</TableCell>
-                  <TableCell>{batch.coordinator}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={batch.status === 'Active' ? 'default' : batch.status === 'Upcoming' ? 'secondary' : 'outline'}>
-                      {batch.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="mr-1">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              {batches.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No batches found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                batches.map((batch) => (
+                  <TableRow key={batch.id}>
+                    <TableCell className="font-medium">{batch.id}</TableCell>
+                    <TableCell>{batch.name}</TableCell>
+                    <TableCell className="text-center">{batch.students}</TableCell>
+                    <TableCell>{batch.coordinator}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={batch.status === 'Active' ? 'default' : batch.status === 'Upcoming' ? 'secondary' : 'outline'}>
+                        {batch.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" className="mr-1">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

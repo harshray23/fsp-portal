@@ -1,32 +1,18 @@
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, PieChart, BarChart3, Users } from 'lucide-react';
+import { Download, PieChart, BarChart3 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 
-// Mock data
-const reportTypes = [
-  { id: "attendance_batch", name: "Batch-wise Attendance Report" },
-  { id: "attendance_dept", name: "Department-wise Attendance Report" },
-  { id: "performance_batch", name: "Batch-wise Performance Report" },
-];
+// Mock data cleared
+const reportTypes: any[] = [];
+const batches: any[] = [];
+const departments: any[] = [];
 
-const batches = [
-  { id: "FSP-CSE-A1", name: "Computer Science - Batch A1" },
-  { id: "FSP-ECE-B2", name: "Electronics - Batch B2" },
-];
-
-const departments = [
-  { id: "CSE", name: "Computer Science & Engineering" },
-  { id: "ECE", name: "Electronics & Communication Engineering" },
-];
 
 export default function TeacherReportsPage() {
-  // State for selections would go here in a client component
-  // For this server component, we'll just display the structure.
-
   return (
     <>
       <PageHeader title="Generate Reports" description="View and download FSP reports." />
@@ -39,9 +25,9 @@ export default function TeacherReportsPage() {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="report-type">Report Type</Label>
-            <Select>
+            <Select disabled={reportTypes.length === 0}>
               <SelectTrigger id="report-type">
-                <SelectValue placeholder="Select report type" />
+                <SelectValue placeholder={reportTypes.length === 0 ? "No report types available" : "Select report type"} />
               </SelectTrigger>
               <SelectContent>
                 {reportTypes.map(rt => (
@@ -52,9 +38,9 @@ export default function TeacherReportsPage() {
           </div>
           <div>
             <Label htmlFor="batch-select">Select Batch (if applicable)</Label>
-            <Select>
+            <Select disabled={batches.length === 0}>
               <SelectTrigger id="batch-select">
-                <SelectValue placeholder="Select batch" />
+                <SelectValue placeholder={batches.length === 0 ? "No batches available" : "Select batch"} />
               </SelectTrigger>
               <SelectContent>
                 {batches.map(b => (
@@ -65,9 +51,9 @@ export default function TeacherReportsPage() {
           </div>
           <div>
             <Label htmlFor="dept-select">Select Department (if applicable)</Label>
-            <Select>
+            <Select disabled={departments.length === 0}>
               <SelectTrigger id="dept-select">
-                <SelectValue placeholder="Select department" />
+                <SelectValue placeholder={departments.length === 0 ? "No departments available" : "Select department"} />
               </SelectTrigger>
               <SelectContent>
                 {departments.map(d => (
@@ -78,7 +64,7 @@ export default function TeacherReportsPage() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button>
+          <Button disabled={reportTypes.length === 0}>
             <Download className="mr-2 h-4 w-4" /> Generate & Download Report
           </Button>
         </CardFooter>
@@ -92,28 +78,29 @@ export default function TeacherReportsPage() {
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
             Report previews would typically show charts and key statistics based on the selected criteria.
+            Currently, no data is available to generate previews.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2 flex items-center"><PieChart className="mr-2 h-5 w-5 text-primary" /> Attendance Distribution</h3>
               <Image 
-                src="https://placehold.co/600x400.png?text=Attendance+Chart" 
-                alt="Placeholder Attendance Chart" 
+                src="https://placehold.co/600x400.png?text=No+Data" 
+                alt="Placeholder Attendance Chart - No Data" 
                 width={600} 
                 height={400} 
                 className="rounded-md"
-                data-ai-hint="pie chart" 
+                data-ai-hint="empty chart" 
               />
             </div>
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2 flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-accent" /> Performance Metrics</h3>
                <Image 
-                src="https://placehold.co/600x400.png?text=Performance+Graph" 
-                alt="Placeholder Performance Graph" 
+                src="https://placehold.co/600x400.png?text=No+Data" 
+                alt="Placeholder Performance Graph - No Data" 
                 width={600} 
                 height={400} 
                 className="rounded-md"
-                data-ai-hint="bar graph"
+                data-ai-hint="empty graph"
               />
             </div>
           </div>

@@ -1,21 +1,23 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
 import {
-  SidebarProvider,
+  // Reordered imports slightly
   Sidebar,
-  SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarTrigger,
+  SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarProvider, // Ensured SidebarProvider is clearly listed
+  SidebarTrigger,
   useSidebar,
-} from '@/components/ui/sidebar'; // Assuming sidebar.tsx is in ui, adjust if needed
+} from '@/components/ui/sidebar';
 import type { NavItem, Role } from '@/config/nav';
 import { getNavItemsByRole } from '@/config/nav';
 import { Logo } from '@/components/common/Logo';
@@ -118,8 +120,14 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen bg-background">
         <Sidebar collapsible="icon" className="border-r">
-          <SidebarHeader className="p-4">
-             <Logo inSheet={false}/>
+          <SidebarHeader className="p-4 flex justify-center items-center"> {/* Adjusted for image centering */}
+             <Logo 
+                imageUrl="https://placehold.co/541x381.png" 
+                imageAlt="AEC FSP Portal Logo"
+                imageWidth={120}
+                imageHeight={85}
+                inSheet={false}
+             />
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>

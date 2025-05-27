@@ -3,7 +3,6 @@
 
 import type { ReactNode } from 'react';
 import {
-  // Reordered imports slightly
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -14,7 +13,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider, // Ensured SidebarProvider is clearly listed
+  SidebarProvider,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
@@ -127,6 +126,7 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
                 imageWidth={120}
                 imageHeight={85}
                 inSheet={false}
+                priority // Added priority for dashboard logo
              />
           </SidebarHeader>
           <SidebarContent>

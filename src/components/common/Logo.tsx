@@ -8,7 +8,7 @@ export interface LogoProps {
   imageAlt?: string;
   imageWidth?: number;
   imageHeight?: number;
-  priority?: boolean; // Add priority prop
+  priority?: boolean;
 }
 
 export function Logo({
@@ -18,13 +18,13 @@ export function Logo({
   imageAlt = "AEC FSP Portal Logo",
   imageWidth,
   imageHeight,
-  priority = false, // Default priority to false
+  priority = false,
 }: LogoProps) {
   const Comp = inSheet ? 'div' : Link;
   const rootProps = inSheet ? {} : { href: '/' };
 
   if (imageUrl && imageWidth && imageHeight) {
-    const imageComponentProps: Omit<ImageProps, 'src'> & { src: string } = { // Ensure src is string
+    const imageComponentProps: Omit<ImageProps, 'src'> & { src: string } = {
       src: imageUrl,
       alt: imageAlt,
       width: imageWidth,
@@ -36,14 +36,14 @@ export function Logo({
     }
 
     return (
-      <Comp {...rootProps} className={`flex items-center ${className || ''}`}>
-        <Image {...imageComponentProps} />
+      <Comp {...rootProps} className={`flex items-center ${className || ''}`} style={{ border: '1px dashed green' }}>
+        <Image {...imageComponentProps} style={{ border: '2px solid red' }} /> {/* Red border for image */}
       </Comp>
     );
   }
 
   return (
-    <Comp {...rootProps} className={`font-bold text-xl tracking-tight flex items-center ${className || ''}`}>
+    <Comp {...rootProps} className={`font-bold text-xl tracking-tight flex items-center ${className || ''}`} style={{ border: '2px solid blue' }}> {/* Blue border for text fallback */}
       AEC <span className="text-primary mx-1">FSP</span> Tracker
     </Comp>
   );

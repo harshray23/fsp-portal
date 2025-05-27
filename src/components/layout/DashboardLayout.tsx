@@ -121,12 +121,12 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
         <Sidebar collapsible="icon" className="border-r">
           <SidebarHeader className="p-4 flex justify-center items-center"> {/* Adjusted for image centering */}
              <Logo 
-                imageUrl="https://placehold.co/541x381.png" 
+                imageUrl="/logo2.png"
                 imageAlt="AEC FSP Portal Logo"
                 imageWidth={120}
                 imageHeight={85}
                 inSheet={false}
-                priority // Added priority for dashboard logo
+                priority
              />
           </SidebarHeader>
           <SidebarContent>
@@ -155,9 +155,9 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-9 w-9">
                     {user.imageUrl ? (
-                       <AvatarImage src={user.imageUrl} alt={user.name} />
+                       <AvatarImage src={user.imageUrl} alt={user.name || "User"} />
                     ) : (
-                       <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name} data-ai-hint="user avatar" />
+                       <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name || "User"} data-ai-hint="user avatar" />
                     )}
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                   </Avatar>

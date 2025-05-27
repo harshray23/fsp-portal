@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,11 +45,11 @@ export default function RoleSelectionPage() {
       <div className="text-center mb-12">
         <Logo
           className="justify-center mb-4"
-          imageUrl="https://placehold.co/180x127.png"
+          imageUrl="/logo1.avif"
           imageAlt="AEC FSP Portal Logo"
           imageWidth={180}
           imageHeight={127}
-          priority // Added priority prop
+          priority
         />
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Welcome to the Finishing School Program Portal for Asansol Engineering College. Please select your role to continue.

@@ -30,7 +30,6 @@ export function Logo({
       alt: imageAlt,
       width: imageWidth,
       height: imageHeight,
-      "data-ai-hint": "logo portal",
     };
     if (priority) {
       imageComponentProps.priority = true;

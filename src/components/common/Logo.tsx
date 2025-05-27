@@ -1,6 +1,7 @@
 
 import Link from 'next/link';
-import Image, { type ImageProps } from 'next/image'; // Import ImageProps
+// import Image, { type ImageProps } from 'next/image'; // Temporarily comment out next/image
+import { cn } from '@/lib/utils';
 
 export interface LogoProps {
   className?: string;
@@ -9,44 +10,40 @@ export interface LogoProps {
   imageAlt?: string;
   imageWidth?: number;
   imageHeight?: number;
-  priority?: boolean;
+  priority?: boolean; // This prop will be unused with a standard img tag
 }
 
 export function Logo({
   className,
   inSheet = false,
   imageUrl,
-  imageAlt = "AEC FSP Portal Logo",
+  imageAlt = "AEC FSP Logo", // Default alt text
   imageWidth,
   imageHeight,
-  priority = false,
 }: LogoProps) {
   const Comp = inSheet ? 'div' : Link;
   const rootProps = inSheet ? {} : { href: '/' };
 
   if (imageUrl && imageWidth && imageHeight) {
-    const imageComponentProps: Omit<ImageProps, 'src'> & { src: string } = {
-      src: imageUrl,
-      alt: imageAlt,
-      width: imageWidth,
-      height: imageHeight,
-    };
-    if (priority) {
-      imageComponentProps.priority = true;
-    }
-
+    // Using a standard HTML <img> tag for debugging
+    // eslint-disable-next-line @next/next/no-img-element
     return (
-      <Comp {...rootProps} className={`flex items-center ${className || ''}`}>
-        <Image {...imageComponentProps} />
-        <span style={{ color: 'red', marginLeft: '10px', fontWeight: 'bold' }}>[IMAGE LOGO ATTEMPTED HERE]</span>
+      <Comp {...rootProps} className={cn('flex items-center', className)}>
+        <img
+          src={imageUrl}
+          alt={imageAlt}
+          width={imageWidth}
+          height={imageHeight}
+          data-ai-hint="placeholder logo" // Keep hint for placehold.co images
+        />
       </Comp>
     );
   }
 
+  // Fallback text if no image URL is provided
   return (
-    <Comp {...rootProps} className={`font-bold text-xl tracking-tight flex items-center ${className || ''}`}>
+    <Comp {...rootProps} className={cn('font-bold text-xl tracking-tight flex items-center', className)}>
       AEC <span className="text-primary mx-1">FSP</span> Tracker
-      <span style={{ color: 'blue', marginLeft: '10px', fontWeight: 'bold' }}>[FALLBACK LOGO TEXT HERE]</span>
     </Comp>
   );
 }

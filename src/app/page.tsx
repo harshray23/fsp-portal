@@ -45,8 +45,8 @@ export default function RoleSelectionPage() {
       <div className="text-center mb-12">
         <Logo
           className="justify-center mb-4"
-          imageUrl="/logo1.avif"
-          imageAlt="AEC FSP Main Logo"
+          imageUrl="https://placehold.co/180x127.png"
+          imageAlt="AEC FSP Main Logo Placeholder"
           imageWidth={180}
           imageHeight={127}
           priority

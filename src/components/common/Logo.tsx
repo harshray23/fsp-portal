@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image, { type ImageProps } from 'next/image'; // Import ImageProps
 
@@ -36,14 +37,14 @@ export function Logo({
     }
 
     return (
-      <Comp {...rootProps} className={`flex items-center ${className || ''}`} style={{ border: '1px dashed green' }}>
-        <Image {...imageComponentProps} style={{ border: '2px solid red' }} /> {/* Red border for image */}
+      <Comp {...rootProps} className={`flex items-center ${className || ''}`}>
+        <Image {...imageComponentProps} />
       </Comp>
     );
   }
 
   return (
-    <Comp {...rootProps} className={`font-bold text-xl tracking-tight flex items-center ${className || ''}`} style={{ border: '2px solid blue' }}> {/* Blue border for text fallback */}
+    <Comp {...rootProps} className={`font-bold text-xl tracking-tight flex items-center ${className || ''}`}>
       AEC <span className="text-primary mx-1">FSP</span> Tracker
     </Comp>
   );

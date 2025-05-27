@@ -121,12 +121,7 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
         <Sidebar collapsible="icon" className="border-r">
           <SidebarHeader className="p-4 flex justify-center items-center"> {/* Adjusted for image centering */}
              <Logo
-                imageUrl="https://placehold.co/120x85.png"
-                imageAlt="AEC FSP Dashboard Logo Placeholder"
-                imageWidth={120}
-                imageHeight={85}
                 inSheet={false}
-                priority
              />
           </SidebarHeader>
           <SidebarContent>

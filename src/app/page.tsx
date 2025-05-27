@@ -45,11 +45,6 @@ export default function RoleSelectionPage() {
       <div className="text-center mb-12">
         <Logo
           className="justify-center mb-4"
-          imageUrl="https://placehold.co/180x127.png"
-          imageAlt="AEC FSP Main Logo Placeholder"
-          imageWidth={180}
-          imageHeight={127}
-          priority
         />
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Welcome to the Finishing School Program Portal for Asansol Engineering College. Please select your role to continue.

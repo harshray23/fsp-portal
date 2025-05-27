@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image'; // Import next/image
+import Image, { type ImageProps } from 'next/image'; // Import ImageProps
 
 export interface LogoProps {
   className?: string;
@@ -8,29 +8,36 @@ export interface LogoProps {
   imageAlt?: string;
   imageWidth?: number;
   imageHeight?: number;
+  priority?: boolean; // Add priority prop
 }
 
 export function Logo({
   className,
   inSheet = false,
   imageUrl,
-  imageAlt = "AEC FSP Portal Logo", // More specific default alt
+  imageAlt = "AEC FSP Portal Logo",
   imageWidth,
   imageHeight,
+  priority = false, // Default priority to false
 }: LogoProps) {
   const Comp = inSheet ? 'div' : Link;
   const rootProps = inSheet ? {} : { href: '/' };
 
   if (imageUrl && imageWidth && imageHeight) {
+    const imageComponentProps: Omit<ImageProps, 'src'> & { src: string } = { // Ensure src is string
+      src: imageUrl,
+      alt: imageAlt,
+      width: imageWidth,
+      height: imageHeight,
+      "data-ai-hint": "logo portal",
+    };
+    if (priority) {
+      imageComponentProps.priority = true;
+    }
+
     return (
       <Comp {...rootProps} className={`flex items-center ${className || ''}`}>
-        <Image
-          src={imageUrl}
-          alt={imageAlt}
-          width={imageWidth}
-          height={imageHeight}
-          data-ai-hint="logo portal"
-        />
+        <Image {...imageComponentProps} />
       </Comp>
     );
   }

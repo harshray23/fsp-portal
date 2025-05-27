@@ -48,6 +48,7 @@ export default function RoleSelectionPage() {
           imageAlt="AEC FSP Portal Logo"
           imageWidth={180}
           imageHeight={127}
+          priority // Added priority prop
         />
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Welcome to the Finishing School Program Portal for Asansol Engineering College. Please select your role to continue.

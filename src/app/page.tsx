@@ -46,7 +46,7 @@ export default function RoleSelectionPage() {
         <Logo
           className="justify-center mb-4"
           imageUrl="/logo1.avif"
-          imageAlt="AEC FSP Portal Logo"
+          imageAlt="AEC FSP Main Logo"
           imageWidth={180}
           imageHeight={127}
           priority

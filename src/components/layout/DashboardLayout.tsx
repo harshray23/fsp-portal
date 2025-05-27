@@ -46,7 +46,7 @@ function NavMenuItem({ item, currentPath }: { item: NavItem; currentPath: string
   const { state: sidebarState } = useSidebar();
   const [isSubMenuOpen, setIsSubMenuOpen] = React.useState(currentPath.startsWith(item.href) && item.items && item.items.length > 0);
 
-  const isActive = item.items 
+  const isActive = item.items
     ? currentPath.startsWith(item.href)
     : currentPath === item.href;
 
@@ -75,7 +75,7 @@ function NavMenuItem({ item, currentPath }: { item: NavItem; currentPath: string
                   isActive={currentPath === subItem.href}
                 >
                   <Link href={subItem.href}>
-                    {subItem.icon && <subItem.icon />} 
+                    {subItem.icon && <subItem.icon />}
                     <span>{subItem.title}</span>
                   </Link>
                 </SidebarMenuSubButton>
@@ -109,7 +109,7 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
     // Mock logout
     router.push('/');
   };
-  
+
   const getInitials = (name?: string) => {
     if (!name) return "U";
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -120,9 +120,9 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
       <div className="flex min-h-screen bg-background">
         <Sidebar collapsible="icon" className="border-r">
           <SidebarHeader className="p-4 flex justify-center items-center"> {/* Adjusted for image centering */}
-             <Logo 
+             <Logo
                 imageUrl="/logo2.png"
-                imageAlt="AEC FSP Portal Logo"
+                imageAlt="AEC FSP Dashboard Logo"
                 imageWidth={120}
                 imageHeight={85}
                 inSheet={false}

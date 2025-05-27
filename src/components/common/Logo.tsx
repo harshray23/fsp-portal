@@ -38,6 +38,7 @@ export function Logo({
     return (
       <Comp {...rootProps} className={`flex items-center ${className || ''}`}>
         <Image {...imageComponentProps} />
+        <span style={{ color: 'red', marginLeft: '10px', fontWeight: 'bold' }}>[IMAGE LOGO ATTEMPTED HERE]</span>
       </Comp>
     );
   }
@@ -45,6 +46,7 @@ export function Logo({
   return (
     <Comp {...rootProps} className={`font-bold text-xl tracking-tight flex items-center ${className || ''}`}>
       AEC <span className="text-primary mx-1">FSP</span> Tracker
+      <span style={{ color: 'blue', marginLeft: '10px', fontWeight: 'bold' }}>[FALLBACK LOGO TEXT HERE]</span>
     </Comp>
   );
 }

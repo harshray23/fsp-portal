@@ -183,7 +183,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, []) // Changed dependency array to empty
+  }, []) // Corrected: Effect runs once on mount and cleans up on unmount.
 
   return {
     ...state,

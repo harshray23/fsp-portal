@@ -23,7 +23,7 @@ import { getNavItemsByRole } from '@/config/nav';
 import { Logo } from '@/components/common/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { LogOut, ChevronDown, ChevronUp, Settings, Loader2 } from 'lucide-react'; // Added Settings back, Loader2 for loading
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
@@ -140,7 +140,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         toast({ title: "Unauthorized", description: "Please log in to continue.", variant: "destructive" });
         
         // Redirect to the appropriate login page for the current dashboard role, or homepage
-        let loginPath = '/';
+        let loginPath = '/'; // Default to homepage
         if (role === 'student') loginPath = '/student/login';
         else if (role === 'teacher') loginPath = '/teacher/login';
         else if (role === 'admin') loginPath = '/admin/login';
@@ -150,15 +150,20 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     });
 
     return () => unsubscribe(); // Cleanup subscription on unmount
-  }, [role, router, toast]);
+  }, [role, router]); // Removed toast from dependencies
 
 
   const handleLogout = async () => {
-    setIsLoading(true);
-    await authLogout();
-    toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    // setCurrentUser(null) will be handled by onAuthUserChanged listener, triggering redirect.
-    // router.push('/'); // onAuthUserChanged will redirect
+    setIsLoading(true); // Show loader during logout process
+    try {
+      await authLogout();
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      // setCurrentUser(null) and redirect will be handled by onAuthUserChanged listener.
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({ title: "Logout Failed", description: "An error occurred during logout.", variant: "destructive"});
+      setIsLoading(false); // Hide loader if logout fails
+    }
   };
 
   const getInitials = (name?: string | null) => {
@@ -238,11 +243,13 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push(`/${currentUser.roleFromProps}/dashboard/settings`)}>
-                  Settings
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
-                  Log out
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -253,4 +260,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </main>
         </div>
       </div>
-    </SidebarProvider
+    </SidebarProvider>
+  );
+}

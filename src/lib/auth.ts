@@ -14,11 +14,11 @@ import Cookies from 'js-cookie';
 // bcryptjs was previously used for client-side password hashing in mock auth.
 // With Firebase Auth, Firebase handles password hashing securely on its servers.
 
-interface AppUser {
+export interface AppUser {
   uid: string;
   email: string | null;
   name?: string | null;
-  role: UserRole; // In production, this should ideally come from verified Firebase Custom Claims.
+  role: UserRole; // In production, this should come from verified Firebase Custom Claims.
 }
 
 /**
@@ -37,6 +37,7 @@ export const login = async (identifier: string, passwordPlainText: string, role:
     // should be sent to a backend endpoint. That backend (using Firebase Admin SDK) would verify the ID token,
     // then create a session cookie (e.g., using admin.auth().createSessionCookie()) and set it in an HTTP response
     // with `HttpOnly`, `Secure`, and `SameSite` attributes. The middleware would then verify this server-set HttpOnly session cookie.
+    // This is the most secure method as HttpOnly cookies are not accessible via client-side JavaScript.
     Cookies.set('authToken', token, { 
       expires: 1, // 1 day
       path: '/', 
@@ -44,17 +45,19 @@ export const login = async (identifier: string, passwordPlainText: string, role:
       sameSite: 'lax' // Provides some CSRF protection
     }); 
 
-    // PRODUCTION AUTHORIZATION (Custom Claims): For robust role-based access control,
+    // PRODUCTION AUTHORIZATION (Firebase Custom Claims): For robust role-based access control,
     // roles (student, teacher, admin) should be managed using Firebase Custom Claims.
     // These claims are set server-side (via Firebase Admin SDK, e.g., after registration or by an admin).
     // Custom claims are included in the ID token and can be securely read on the client or server
     // (after token verification) to make authorization decisions. This prototype infers role from
     // login context, which is less secure than server-set custom claims.
+    // Example: const customClaims = (await firebaseUser.getIdTokenResult()).claims;
+    // const userRoleFromClaims = customClaims.role || role; // Fallback if claims not set
     const appUser: AppUser = { 
       uid: firebaseUser.uid, 
       email: firebaseUser.email,
       name: firebaseUser.displayName || firebaseUser.email,
-      role: role 
+      role: role // In production, this should be derived from customClaims
     };
     
     return { success: true, user: appUser };
@@ -75,6 +78,8 @@ export const registerStudent = async (studentData: any): Promise<{ success: bool
     // In a real app, additional student details (studentId, rollNumber, department)
     // would be stored in a database like Firestore, linked by firebaseUser.uid.
     // The 'role' ('student') should be set as a Firebase Custom Claim via the Admin SDK for security.
+    // Example (server-side, e.g., in a Cloud Function triggered on user creation):
+    // await admin.auth().setCustomUserClaims(firebaseUser.uid, { role: 'student' });
     console.log("Firebase Student Registered:", firebaseUser.uid, "Name:", studentData.name);
     
     const appUser: AppUser = { 
@@ -101,6 +106,8 @@ export const registerStaff = async (staffData: any): Promise<{ success: boolean;
     // In a real app, additional staff details (department for teacher)
     // would be stored in Firestore, linked by firebaseUser.uid.
     // The role (staffData.role) should be set as a Firebase Custom Claim via the Admin SDK for security.
+    // Example (server-side):
+    // await admin.auth().setCustomUserClaims(firebaseUser.uid, { role: staffData.role });
     console.log(`Firebase ${staffData.role} Registered:`, firebaseUser.uid, "Name:", staffData.name);
 
     const appUser: AppUser = { 
@@ -141,7 +148,8 @@ export const onAuthUserChanged = (callback: (user: FirebaseUser | null) => void)
  *    Firebase Admin SDK (`admin.auth().verifyIdToken(tokenString)`) to cryptographically
  *    verify the token's signature, expiry, and integrity.
  * This client-side mock does NOT perform any actual cryptographic verification.
- * The JWT_SECRET from .env is NOT used here because Firebase ID tokens are verified using Firebase's public keys.
+ * A JWT_SECRET from .env is NOT used here because Firebase ID tokens are verified using Firebase's public keys.
+ * This function only serves to illustrate where backend verification would occur.
  */
 export const verifyToken = (token: string): AppUser | null => {
   if (!token) {
@@ -150,13 +158,15 @@ export const verifyToken = (token: string): AppUser | null => {
   // This is a MOCK. A real backend would use Firebase Admin SDK to verify the Firebase ID token.
   // Example: const decodedToken = await admin.auth().verifyIdToken(token);
   // Then, it would extract UID, email, and custom claims (for role).
+  // const userRoleFromClaims = decodedToken.role || 'unknown'; 
   
   // For this demo, we'll assume any non-empty token string passed here is "valid"
   // and belongs to an admin, as the demo /api/secure-info route expects an admin.
+  // This is a placeholder and does NOT represent secure token validation.
   return {
-    uid: 'mock-uid-from-client-simulation',
-    email: 'simulated-admin-from-client@example.com', 
-    name: 'Simulated Admin (Client Mock Verification)',
+    uid: 'mock-uid-simulating-backend-verification',
+    email: 'simulated-admin-from-backend@example.com', 
+    name: 'Simulated Admin (Backend Mock Verification)',
     role: 'admin', // Hardcoded for the demo API which checks for 'admin' role
   };
 };
@@ -191,7 +201,7 @@ export const verifyToken = (token: string): AppUser | null => {
  *      This confirms the token's integrity, signature, and expiry.
  * 
  * 3. CSRF Protection:
- *    - If using cookie-based sessions (especially HttpOnly cookies), CSRF protection
+ *    - If using server-set cookie-based sessions (especially HttpOnly cookies), CSRF protection
  *      (e.g., using anti-CSRF tokens like the double submit cookie pattern or synchronizer token pattern)
  *      is essential for all state-changing requests (POST, PUT, DELETE).
  *    - Next.js Server Actions have built-in CSRF protection. For traditional API routes with cookies,
@@ -207,7 +217,8 @@ export const verifyToken = (token: string): AppUser | null => {
  *      using Firebase Custom Claims. These claims are set via the Firebase Admin SDK on a backend
  *      (e.g., after user registration or by an admin).
  *    - Custom claims are then included in the Firebase ID token and can be securely read on the client
- *      or server (after token verification) to make authorization decisions.
+ *      (e.g., using `firebaseUser.getIdTokenResult().then(idTokenResult => idTokenResult.claims.role)`)
+ *      or server (after token verification via Admin SDK) to make authorization decisions.
  *    - The current prototype passes the role around on the client or infers it contextually, which is
  *      less secure than server-set custom claims.
  *

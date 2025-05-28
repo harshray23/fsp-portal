@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, User, Shield, BookOpen } from 'lucide-react';
 import { Logo } from '@/components/common/Logo';
+import React from 'react'; // Import React for React.memo
 
 interface RoleCardProps {
   title: string;
@@ -13,7 +14,7 @@ interface RoleCardProps {
   registerPath?: string;
 }
 
-function RoleCard({ title, description, icon: Icon, loginPath, registerPath }: RoleCardProps) {
+const RoleCard = React.memo(function RoleCard({ title, description, icon: Icon, loginPath, registerPath }: RoleCardProps) {
   return (
     <Card className="w-full max-w-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="items-center text-center">
@@ -37,7 +38,9 @@ function RoleCard({ title, description, icon: Icon, loginPath, registerPath }: R
       </CardContent>
     </Card>
   );
-}
+});
+RoleCard.displayName = 'RoleCard';
+
 
 export default function RoleSelectionPage() {
   return (

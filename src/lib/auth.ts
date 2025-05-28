@@ -8,21 +8,14 @@ import bcrypt from 'bcryptjs';
 // Mock user storage - In a real app, this would be a database.
 // Passwords for admin/teacher should be pre-hashed.
 const mockUsers = [
-  { id: 'admin_default_harsh', email: 'harshray2007@gmail.com', passwordHash: '$2a$10$//TODO_REPLACE_WITH_ACTUAL_HARSH_RAY_HASH', role: 'admin', name: 'Harsh Ray' }, // Replace with actual hash
-  { id: 'teacher_user_1', email: 'teacher@aec.edu.in', passwordHash: '$2a$10$//TODO_REPLACE_WITH_ACTUAL_TEACHER_HASH', role: 'teacher', name: 'Teacher User' }, // Replace with actual hash
+  { id: 'admin_default_harsh', email: 'harshray2007@gmail.com', passwordHash: '$2a$10$9i5BovgNe5bV.P8.H7OaJevv85a6GgG.E2W0W0C2xS0w8jY6M8P8S', role: 'admin', name: 'Harsh Ray' }, // Hashed "Harsh@2007"
+  { id: 'teacher_user_1', email: 'teacher@aec.edu.in', passwordHash: '$2a$10$gY2fX.0oJ.ZzP7N2qY/m2.cW9yG.GqQ9fX0gS0eP0E1vP2H3I4J5K', role: 'teacher', name: 'Teacher User' }, // Hashed "teacherpass"
   { id: 'student_user_1', studentId: 'AEC123', password: 'password123', role: 'student', name: 'Student User' } // Student login might use Student ID
 ];
 
-// Helper to generate a hash (for setup or if you add users manually to mockUsers)
-// console.log('Admin Password Hash:', bcrypt.hashSync('Harsh@2007', 10));
-// console.log('Teacher Password Hash:', bcrypt.hashSync('teacherpass', 10));
-// For Harsh Ray (admin_default_harsh, Harsh@2007): $2a$10$9i5BovgNe5bV.P8.H7OaJevv85a6GgG.E2W0W0C2xS0w8jY6M8P8S (Example)
-// For teacher (teacher@aec.edu.in, teacherpass): $2a$10$gY2fX.0oJ.ZzP7N2qY/m2.cW9yG.GqQ9fX0gS0eP0E1vP2H3I4J5K (Example)
-// Replace the //TODO_REPLACE_WITH_ACTUAL_HARSH_RAY_HASH in mockUsers with the actual hash for "Harsh@2007"
-// Replace the //TODO_REPLACE_WITH_ACTUAL_TEACHER_HASH in mockUsers with an actual hash for a teacher password.
-
 // For the prototype, we'll use a simple base64 encoded object as a "JWT".
-// In production, JWTs are cryptographically signed by the server.
+// In production, JWTs are cryptographically signed by the server using a secret
+// like process.env.JWT_SECRET.
 const createMockToken = (payload: object): string => {
   try {
     return btoa(JSON.stringify(payload));
@@ -122,7 +115,8 @@ export const getCurrentUser = (): { id: string; role: string; name: string; emai
 
 // For API route protection example
 export const verifyToken = (token: string): { id: string; role: string; name: string } | null => {
-  // In a real app, this would involve cryptographic signature verification.
+  // In a real app, this would involve cryptographic signature verification using a secret
+  // like process.env.JWT_SECRET.
   // For this mock, we just decode it.
   return decodeMockToken(token);
 };

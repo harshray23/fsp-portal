@@ -1,8 +1,9 @@
+
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CalendarClock, UserCircle } from 'lucide-react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button'; // Added Button import
+import { Button } from '@/components/ui/button'; 
 
 // Mock data cleared or set to default
 const batchDetails = {

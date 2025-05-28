@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -30,7 +31,7 @@ export default function TeacherReportsPage() {
                 <SelectValue placeholder={reportTypes.length === 0 ? "No report types available" : "Select report type"} />
               </SelectTrigger>
               <SelectContent>
-                {reportTypes.map(rt => (
+                {reportTypes.map((rt: any) => (
                   <SelectItem key={rt.id} value={rt.id}>{rt.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -43,7 +44,7 @@ export default function TeacherReportsPage() {
                 <SelectValue placeholder={batches.length === 0 ? "No batches available" : "Select batch"} />
               </SelectTrigger>
               <SelectContent>
-                {batches.map(b => (
+                {batches.map((b: any) => (
                   <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -56,7 +57,7 @@ export default function TeacherReportsPage() {
                 <SelectValue placeholder={departments.length === 0 ? "No departments available" : "Select department"} />
               </SelectTrigger>
               <SelectContent>
-                {departments.map(d => (
+                {departments.map((d: any) => (
                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                 ))}
               </SelectContent>

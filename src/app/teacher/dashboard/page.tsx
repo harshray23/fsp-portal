@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarClock, CheckCircle2, Users, AlertTriangle } from 'lucide-react';
@@ -8,16 +9,8 @@ const teacherData = {
   name: "Teacher User", // Generic name
   activeClasses: 0,
   totalStudents: 0,
-  upcomingSession: null, // No upcoming session by default
-  /*
-  upcomingSession: {
-    subject: "Advanced Java",
-    batch: "FSP-CSE-A1",
-    time: "Tomorrow, 09:00 AM",
-    room: "CL-05",
-  },
-  */
-  pendingTasks: [] // No pending tasks by default
+  upcomingSession: null, 
+  pendingTasks: [] 
 };
 
 export default function TeacherDashboardPage() {
@@ -50,11 +43,9 @@ export default function TeacherDashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Attendance Submitted</CardTitle>
             <CheckCircle2 className="h-5 w-5 text-muted-foreground" /> 
-            {/* Default to muted, change to green-500 if logic dictates */}
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">N/A</div> 
-            {/* Or 0% if that's more appropriate for no data */}
             <p className="text-xs text-muted-foreground">For yesterday&apos;s classes</p>
              <Link href="/teacher/dashboard/manage-attendance" className="text-xs text-primary hover:underline">View Attendance</Link>
           </CardContent>
@@ -69,10 +60,10 @@ export default function TeacherDashboardPage() {
           <CardContent>
             {teacherData.upcomingSession ? (
               <>
-                <p className="font-semibold text-lg">{teacherData.upcomingSession.subject}</p>
-                <p className="text-sm text-muted-foreground">Batch: {teacherData.upcomingSession.batch}</p>
-                <p className="text-sm text-muted-foreground">Time: {teacherData.upcomingSession.time}</p>
-                <p className="text-sm text-muted-foreground">Room: {teacherData.upcomingSession.room}</p>
+                <p className="font-semibold text-lg">{(teacherData.upcomingSession as any).subject}</p>
+                <p className="text-sm text-muted-foreground">Batch: {(teacherData.upcomingSession as any).batch}</p>
+                <p className="text-sm text-muted-foreground">Time: {(teacherData.upcomingSession as any).time}</p>
+                <p className="text-sm text-muted-foreground">Room: {(teacherData.upcomingSession as any).room}</p>
               </>
             ) : (
               <p className="text-muted-foreground">No upcoming sessions scheduled.</p>

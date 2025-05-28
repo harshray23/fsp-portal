@@ -10,18 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react'; // Added useMemo
-import { useForm } from "react-hook-form";
+import { useState, useEffect, useMemo } from 'react'; 
+import { useForm, Controller } from "react-hook-form"; // Added Controller
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for batches and days
-const mockBatches = [
-  { id: 'FSP-CSE-A1', name: 'FSP CSE A1' },
-  { id: 'FSP-ECE-B2', name: 'FSP ECE B2' },
-  { id: 'FSP-IT-C3', name: 'FSP IT C3' },
-];
+// Mock data for batches and days cleared
+const mockBatches: { id: string; name: string; }[] = [];
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 interface TimetableEntry {
@@ -32,7 +28,7 @@ interface TimetableEntry {
   endTime: string;
   subject: string;
   room: string;
-  status: string; // e.g., 'Scheduled', 'Cancelled'
+  status: string; 
 }
 
 const scheduleEntrySchema = z.object({
@@ -74,7 +70,7 @@ export default function ManageTimetablesPage() {
 
   async function onSubmit(values: ScheduleEntryFormValues) {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
     
     const newEntry: TimetableEntry = {
       id: `TT-${Date.now()}`, 
@@ -117,14 +113,14 @@ export default function ManageTimetablesPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label htmlFor="batch">Batch</Label>
+                    <Label htmlFor="batch-form">Batch</Label> 
                     <Controller
                       name="batch"
                       control={form.control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger id="batch">
-                            <SelectValue placeholder="Select Batch" />
+                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={mockBatches.length === 0}>
+                          <SelectTrigger id="batch-form">
+                            <SelectValue placeholder={mockBatches.length === 0 ? "No batches available" : "Select Batch"} />
                           </SelectTrigger>
                           <SelectContent>
                             {mockBatches.map(batch => (
@@ -137,13 +133,13 @@ export default function ManageTimetablesPage() {
                     {form.formState.errors.batch && <p className="text-xs text-destructive">{form.formState.errors.batch.message}</p>}
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="day">Day of Week</Label>
+                    <Label htmlFor="day-form">Day of Week</Label>
                      <Controller
                         name="day"
                         control={form.control}
                         render={({ field }) => (
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger id="day">
+                            <SelectTrigger id="day-form">
                               <SelectValue placeholder="Select Day" />
                             </SelectTrigger>
                             <SelectContent>
@@ -181,7 +177,7 @@ export default function ManageTimetablesPage() {
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isLoading}>
+                  <Button type="submit" disabled={isLoading || mockBatches.length === 0}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Schedule Entry
                   </Button>
@@ -251,4 +247,3 @@ export default function ManageTimetablesPage() {
     </>
   );
 }
-

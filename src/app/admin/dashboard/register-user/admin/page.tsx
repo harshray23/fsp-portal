@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useState, useMemo } from 'react'; // Added useMemo
+import { useState, useMemo } from 'react'; 
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminUser {
@@ -16,11 +16,9 @@ interface AdminUser {
   email: string;
 }
 
-const generateInitialMockAdmins = (): AdminUser[] => [
-  { id: 'admin_default_harsh', name: 'Harsh Ray', email: 'harshray2007@gmail.com' },
-  { id: 'admin_jane_doe', name: 'Jane Admington', email: 'jane.admington@aec.edu.in' },
-  { id: 'admin_john_smith', name: 'John Smithson', email: 'john.smithson@aec.edu.in' },
-];
+// Cleared initial mock admins for the displayed list.
+// The UserRegistrationForm will still have default values for "Harsh Ray" for new admin creation.
+const generateInitialMockAdmins = (): AdminUser[] => [];
 
 
 export default function RegisterAdminPage() {
@@ -29,10 +27,12 @@ export default function RegisterAdminPage() {
   const { toast } = useToast();
 
   const handleDeleteAdmin = (adminId: string) => {
+    // This check is for the default admin details pre-filled in the form,
+    // in case an admin with these exact details was somehow added to the list.
     if (adminId === 'admin_default_harsh' && admins.find(a => a.id === adminId)?.email === 'harshray2007@gmail.com') {
       toast({
         title: "Deletion Restricted",
-        description: "The default admin account (Harsh Ray) cannot be deleted through this interface.",
+        description: "The default admin account details (Harsh Ray) cannot be deleted through this interface if it were listed. This is a conceptual restriction.",
         variant: "destructive",
       });
       return;
@@ -72,7 +72,7 @@ export default function RegisterAdminPage() {
               {admins.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="h-24 text-center">
-                    No other admins found.
+                    No admins found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -86,7 +86,8 @@ export default function RegisterAdminPage() {
                         size="icon" 
                         className="text-destructive hover:text-destructive"
                         onClick={() => handleDeleteAdmin(admin.id)}
-                        disabled={admin.id === 'admin_default_harsh' && admin.email === 'harshray2007@gmail.com'}
+                        // Disable deletion if it matches the default admin's email, as a safeguard
+                        disabled={admin.email === 'harshray2007@gmail.com'}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

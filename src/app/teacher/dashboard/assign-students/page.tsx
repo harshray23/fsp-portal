@@ -17,12 +17,19 @@ import { useToast } from '@/hooks/use-toast';
 const mockStudents: any[] = [];
 const mockBatches: any[] = [];
 
+interface Student {
+  id: string;
+  name: string;
+  roll: string;
+  currentBatch?: string | null;
+}
+
 export default function AssignStudentsPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
-  const [students, setStudents] = useState(mockStudents); // Initialize with empty mockStudents
+  const [students, setStudents] = useState<Student[]>(mockStudents); 
 
   const filteredStudents = students.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -44,7 +51,7 @@ export default function AssignStudentsPage() {
       });
       return;
     }
-    // Simulate API call
+    
     setStudents(prevStudents => 
       prevStudents.map(s => 
         selectedStudents.includes(s.id) ? { ...s, currentBatch: selectedBatch } : s
@@ -55,7 +62,6 @@ export default function AssignStudentsPage() {
       description: `${selectedStudents.length} student(s) assigned to batch ${selectedBatch}.`,
     });
     setSelectedStudents([]);
-    // setSelectedBatch(null); // Keep batch selected for further assignments if needed
   };
 
   return (
@@ -126,7 +132,7 @@ export default function AssignStudentsPage() {
                   {mockBatches.length === 0 ? (
                     <SelectItem value="no-batches" disabled>No batches available</SelectItem>
                   ) : (
-                    mockBatches.map(batch => (
+                    mockBatches.map((batch: any) => (
                       <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
                     ))
                   )}

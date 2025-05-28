@@ -54,7 +54,8 @@ export default function ManageAttendancePage() {
       return;
     }
     console.log("Saving attendance:", { date: selectedDate, classId: selectedClass, attendance });
-    toast({ title: "Attendance Saved", description: `Attendance for ${mockClasses.find(c=>c.id === selectedClass)?.subject} on ${selectedDate ? format(selectedDate, "PPP") : ""} submitted.` });
+    const className = mockClasses.find(c=>c.id === selectedClass)?.subject || "Selected Class";
+    toast({ title: "Attendance Saved", description: `Attendance for ${className} on ${selectedDate ? format(selectedDate, "PPP") : ""} submitted.` });
   };
 
   return (
@@ -102,7 +103,7 @@ export default function ManageAttendancePage() {
                 {mockClasses.length === 0 ? (
                     <SelectItem value="no-classes" disabled>No classes available</SelectItem>
                 ) : (
-                    mockClasses.map(cls => (
+                    mockClasses.map((cls: any) => (
                     <SelectItem key={cls.id} value={cls.id}>
                         {cls.batch} - {cls.subject} ({cls.time})
                     </SelectItem>
@@ -119,7 +120,7 @@ export default function ManageAttendancePage() {
           <CardHeader>
             <CardTitle>Mark Attendance</CardTitle>
             <CardDescription>
-              For: {mockClasses.find(c=>c.id === selectedClass)?.subject} on {selectedDate ? format(selectedDate, "PPP") : ""}
+              For: {mockClasses.find(c=>c.id === selectedClass)?.subject || "Selected Class"} on {selectedDate ? format(selectedDate, "PPP") : ""}
             </CardDescription>
           </CardHeader>
           <CardContent>

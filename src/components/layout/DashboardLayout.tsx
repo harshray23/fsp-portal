@@ -23,7 +23,7 @@ import { getNavItemsByRole } from '@/config/nav';
 import { Logo } from '@/components/common/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, ChevronDown, ChevronUp, Settings, Loader2 } from 'lucide-react'; // Added Settings back, Loader2 for loading
+import { LogOut, ChevronDown, ChevronUp, Settings, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
@@ -35,21 +35,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { logout as authLogout, onAuthUserChanged } from '@/lib/auth'; // Firebase auth functions
+import { logout as authLogout, onAuthUserChanged } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import type { User as FirebaseUser } from 'firebase/auth';
+import Cookies from 'js-cookie';
 
 interface DashboardLayoutProps {
   children: ReactNode;
   role: Role;
 }
 
-interface AppUser { // Simplified user object for display
+interface AppUser {
   name?: string | null;
   email?: string | null;
-  imageUrl?: string | null; // Firebase user.photoURL
-  roleFromProps: Role; // The role this layout is for
-  // Actual role from Firebase custom claims or Firestore would be used in a full setup
+  imageUrl?: string | null;
+  roleFromProps: Role;
 }
 
 function NavMenuItem({ item, currentPath }: { item: NavItem; currentPath: string }) {
@@ -128,19 +128,28 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         // This is a simplification and not secure for actual role enforcement.
         // A mismatch check could be: if (userRoleFromDB !== role) { /* redirect or deny */ }
 
+        // Simulating fetching actual role - for now, just check if the cookie exists
+        // as a basic check for the middleware having allowed access.
+        const token = Cookies.get('authToken');
+        if (!token) {
+          // This case should ideally be caught by middleware, but as a fallback:
+          router.replace('/'); // Redirect to home if no token, even if Firebase user exists
+          return;
+        }
+        
+        // TODO: Verify token if needed, and fetch role from token or Firestore.
+        // For now, assuming the role prop is the source of truth after middleware pass.
         setCurrentUser({
           name: firebaseUser.displayName || firebaseUser.email,
           email: firebaseUser.email,
           imageUrl: firebaseUser.photoURL,
-          roleFromProps: role, // Store the expected role
+          roleFromProps: role,
         });
       } else {
         // User is signed out.
         setCurrentUser(null);
-        toast({ title: "Unauthorized", description: "Please log in to continue.", variant: "destructive" });
-        
-        // Redirect to the appropriate login page for the current dashboard role, or homepage
-        let loginPath = '/'; // Default to homepage
+        // Middleware should handle redirecting to login, but as a fallback:
+        let loginPath = '/'; 
         if (role === 'student') loginPath = '/student/login';
         else if (role === 'teacher') loginPath = '/teacher/login';
         else if (role === 'admin') loginPath = '/admin/login';
@@ -149,25 +158,25 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       setIsLoading(false);
     });
 
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, [role, router]); // Removed toast from dependencies
+    return () => unsubscribe();
+  }, [role]); // Dependency: only re-run if role changes
 
 
   const handleLogout = async () => {
-    setIsLoading(true); // Show loader during logout process
+    setIsLoading(true);
     try {
-      await authLogout();
+      await authLogout(); // This will clear the cookie as well
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      // setCurrentUser(null) and redirect will be handled by onAuthUserChanged listener.
+      // onAuthUserChanged listener will handle redirect
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "An error occurred during logout.", variant: "destructive"});
-      setIsLoading(false); // Hide loader if logout fails
+      setIsLoading(false);
     }
   };
 
   const getInitials = (name?: string | null) => {
-    if (!name) return role.charAt(0).toUpperCase(); // Default to role initial
+    if (!name) return role.charAt(0).toUpperCase();
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
@@ -179,14 +188,31 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     );
   }
   
-  // If still loading or no user after loading (should be caught by effect's redirect)
-  if (!currentUser) {
-     // This state should ideally be brief or handled by the redirect in useEffect.
-     // Display loader just in case to prevent rendering children without user context.
+  if (!currentUser && !isLoading) { // If done loading and still no user, redirect (should be handled by effect)
+    // This state implies onAuthUserChanged determined no user, and redirection should occur.
+    // To prevent brief flash of content, a loader is shown, or redirect handled by effect.
+    // If middleware is working, this might not even be hit often for dashboard routes.
+     let loginPath = '/'; 
+     if (role === 'student') loginPath = '/student/login';
+     else if (role === 'teacher') loginPath = '/teacher/login';
+     else if (role === 'admin') loginPath = '/admin/login';
+     router.replace(loginPath);
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
+    );
+  }
+  
+  // If currentUser is null but still loading, the loader above handles it.
+  // If currentUser exists, render the dashboard.
+  if (!currentUser) { 
+    // This is a safeguard, should ideally be handled by the isLoading state or the redirect logic.
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Redirecting to login...</p>
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
     );
   }
 

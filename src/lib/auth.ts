@@ -41,6 +41,9 @@ const decodeMockToken = (token: string): { id: string; role: string; name: strin
   }
 };
 
+// In a real backend, JWT signing would use a secret from environment variables (e.g., process.env.JWT_SECRET)
+// const JWT_SECRET = process.env.JWT_SECRET; // Example: Would be used by a real JWT library
+
 export const login = async (identifier: string, passwordPlainText: string, role: 'student' | 'teacher' | 'admin'): Promise<{ success: boolean; token?: string; error?: string; user?: any }> => {
   await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
@@ -120,3 +123,16 @@ export const verifyToken = (token: string): { id: string; role: string; name: st
   // For this mock, we just decode it.
   return decodeMockToken(token);
 };
+
+/**
+ * SECURITY NOTE ON CSRF (Cross-Site Request Forgery):
+ * The current authentication uses localStorage for token storage and expects Bearer tokens
+ * in API request headers. This method is generally less vulnerable to traditional CSRF attacks
+ * compared to cookie-based authentication where cookies are sent automatically by the browser.
+ *
+ * If this application were to switch to cookie-based sessions (especially HttpOnly cookies for security),
+ * robust CSRF protection (e.g., using CSRF tokens validated on the server, SameSite cookie attributes)
+ * would be essential for all state-changing requests.
+ *
+ * Next.js Server Actions have built-in mechanisms to help mitigate CSRF.
+ */

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,13 +24,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useState, useMemo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { registerStaff } from "@/lib/auth"; // Import mock registration
+import { registerStaff } from "@/lib/auth"; // Import Firebase registration function
 
+// Department is only for teachers; password for Firebase Auth
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
+  email: z.string().email({ message: "Invalid email address." }), // Used for Firebase Auth
   role: z.enum(["admin", "teacher"], { required_error: "Role is required." }),
-  department: z.string().optional(),
+  department: z.string().optional(), // Firestore for teachers
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
@@ -52,7 +52,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
         email: "harshray2007@gmail.com",
         role: mode,
         department: "CSE(AIML)", 
-        password: "Harsh@2007", // Will be hashed on submission
+        password: "Harsh@2007",
       };
     }
     return {
@@ -60,7 +60,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
       email: "",
       role: mode,
       department: "",
-      password: "", // Will be hashed
+      password: "",
     };
   }, [mode]);
 
@@ -75,7 +75,8 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
 
   async function onSubmit(values: UserRegistrationFormValues) {
     setIsLoading(true);
-    // Password will be hashed by registerStaff
+    // registerStaff handles Firebase Auth user creation.
+    // Additional data like department would be stored in Firestore.
     const result = await registerStaff(values);
     setIsLoading(false);
 
@@ -119,7 +120,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email (for Login)</FormLabel>
                   <FormControl><Input type="email" placeholder="user@example.com" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,7 +165,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Temporary Password</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>

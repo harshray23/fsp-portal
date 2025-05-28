@@ -20,28 +20,20 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { login } from "@/lib/auth"; // Import new login function
 import { useToast } from "@/hooks/use-toast";
+import type { Role } from "@/config/nav";
 
 interface LoginFormProps {
-  role: 'student' | 'teacher' | 'admin';
+  role: Role;
   dashboardPath: string;
 }
 
+// Firebase Auth uses email for login. Student ID login would require custom logic.
+// For now, all roles will use email as the identifier.
 const createFormSchema = (role: LoginFormProps['role']) => {
   return z.object({
-    identifier: z.string().min(1, { message: role === 'student' ? "Student ID is required." : "Email is required." }),
+    email: z.string().email({ message: "Valid email is required." }),
     password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  }).refine(
-    (data) => {
-      if (role !== 'student') { // For admin and teacher, identifier must be an email
-        return z.string().email().safeParse(data.identifier).success;
-      }
-      return true; 
-    },
-    {
-      message: "Invalid email address. Please use a valid email.", 
-      path: ["identifier"],
-    }
-  );
+  });
 };
 
 type LoginFormValues = z.infer<ReturnType<typeof createFormSchema>>;
@@ -55,8 +47,9 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
   const formSchema = useMemo(() => createFormSchema(role), [role]);
 
   const defaultValues = useMemo(() => ({
-    identifier: role === 'admin' ? "harshray2007@gmail.com" : "", // Pre-fill admin email
-    password: role === 'admin' ? "Harsh@2007" : "", // Pre-fill admin password
+    // Identifier now represents email for Firebase Auth
+    email: role === 'admin' ? "harshray2007@gmail.com" : "", 
+    password: role === 'admin' ? "Harsh@2007" : "",
   }), [role]);
 
   const form = useForm<LoginFormValues>({
@@ -66,12 +59,12 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    const result = await login(values.identifier, values.password, role);
+    // The 'identifier' is now 'values.email' for Firebase
+    const result = await login(values.email, values.password, role);
     setIsLoading(false);
 
-    if (result.success && result.token) {
-      // In a real app, context or state management would handle user info.
-      // For prototype, DashboardLayout will read from token.
+    if (result.success && result.user) {
+      // Firebase SDK manages session, DashboardLayout will pick it up.
       router.push(dashboardPath); 
     } else {
       toast({
@@ -89,14 +82,15 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
           <CardContent className="space-y-4 pt-6">
             <FormField
               control={form.control}
-              name="identifier"
+              name="email" // Changed from 'identifier' to 'email'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{role === 'student' ? 'Student ID' : 'Email'}</FormLabel>
+                  <FormLabel>{role === 'student' ? 'Student Email' : 'Email'}</FormLabel> {/* Label adjusted */}
                   <FormControl>
                     <Input 
-                      placeholder={role === 'student' ? 'Enter your Student ID' : 'your.email@example.com'} 
+                      placeholder={role === 'student' ? 'Enter your registered email' : 'your.email@example.com'} 
                       {...field} 
+                      type="email"
                     />
                   </FormControl>
                   <FormMessage />
@@ -140,12 +134,8 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
             </Button>
             {role === 'student' && (
                  <p className="mt-2 text-xs text-center text-muted-foreground">
-                 Forgot password? <a href="#" className="font-medium text-primary hover:underline">Reset here</a>
+                 Forgot password? <button type="button" onClick={() => alert("Password reset with Firebase not implemented yet.")} className="font-medium text-primary hover:underline">Reset here</button>
                </p>
             )}
           </CardFooter>
-        </form>
-      </Form>
-    </Card>
-  );
-}
+        </form

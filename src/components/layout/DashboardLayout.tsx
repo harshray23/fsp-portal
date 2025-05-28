@@ -2,7 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react'; // Added useState
+import { useEffect, useState } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +23,7 @@ import { getNavItemsByRole } from '@/config/nav';
 import { Logo } from '@/components/common/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'; // Added Loader2
+import { LogOut, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
@@ -35,20 +35,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getCurrentUser, logout as authLogout } from '@/lib/auth'; // Auth functions
+import { logout as authLogout, onAuthUserChanged } from '@/lib/auth'; // Firebase auth functions
 import { useToast } from '@/hooks/use-toast';
+import type { User as FirebaseUser } from 'firebase/auth';
 
 interface DashboardLayoutProps {
   children: ReactNode;
   role: Role;
-  // user prop is now derived from token
 }
 
-interface User {
-  name?: string;
-  email?: string;
-  imageUrl?: string;
-  role?: string;
+interface AppUser { // Simplified user object for display
+  name?: string | null;
+  email?: string | null;
+  imageUrl?: string | null; // Firebase user.photoURL
+  roleFromProps: Role; // The role this layout is for
+  // Actual role from Firebase custom claims or Firestore would be used in a full setup
 }
 
 function NavMenuItem({ item, currentPath }: { item: NavItem; currentPath: string }) {
@@ -114,40 +115,58 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      toast({ title: "Unauthorized", description: "Please log in to continue.", variant: "destructive" });
-      router.replace('/'); // Redirect to homepage or specific login page
-      return;
-    }
-    if (user.role !== role) {
-      toast({ title: "Access Denied", description: "You do not have permission to access this page.", variant: "destructive" });
-      authLogout(); // Log out user with incorrect role
-      router.replace('/'); // Redirect to homepage
-      return;
-    }
-    setCurrentUser(user);
-    setIsLoading(false);
-  }, [pathname, role, router, toast]);
+    const unsubscribe = onAuthUserChanged(async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // User is signed in.
+        // TODO: In a real app, fetch user's role from Firestore or custom claims.
+        // For this prototype, we'll trust the 'role' prop passed to DashboardLayout.
+        // This is a simplification and not secure for actual role enforcement.
+        // A mismatch check could be: if (userRoleFromDB !== role) { /* redirect or deny */ }
 
-  const handleLogout = () => {
-    authLogout();
+        setCurrentUser({
+          name: firebaseUser.displayName || firebaseUser.email,
+          email: firebaseUser.email,
+          imageUrl: firebaseUser.photoURL,
+          roleFromProps: role, // Store the expected role
+        });
+      } else {
+        // User is signed out.
+        setCurrentUser(null);
+        toast({ title: "Unauthorized", description: "Please log in to continue.", variant: "destructive" });
+        
+        // Redirect to the appropriate login page for the current dashboard role, or homepage
+        let loginPath = '/';
+        if (role === 'student') loginPath = '/student/login';
+        else if (role === 'teacher') loginPath = '/teacher/login';
+        else if (role === 'admin') loginPath = '/admin/login';
+        router.replace(loginPath);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, [role, router, toast]);
+
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+    await authLogout();
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push('/');
+    // setCurrentUser(null) will be handled by onAuthUserChanged listener, triggering redirect.
+    // router.push('/'); // onAuthUserChanged will redirect
   };
 
-  const getInitials = (name?: string) => {
-    if (!name) return "U";
+  const getInitials = (name?: string | null) => {
+    if (!name) return role.charAt(0).toUpperCase(); // Default to role initial
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
   if (isLoading) {
-    // You can return a loading spinner or a skeleton layout here
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -155,10 +174,15 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     );
   }
   
+  // If still loading or no user after loading (should be caught by effect's redirect)
   if (!currentUser) {
-    // This case should ideally be handled by the redirect in useEffect,
-    // but as a fallback, prevent rendering children if no user.
-    return null; 
+     // This state should ideally be brief or handled by the redirect in useEffect.
+     // Display loader just in case to prevent rendering children without user context.
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
   }
 
 
@@ -208,12 +232,12 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{currentUser.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {currentUser.email}
+                      {currentUser.email} ({currentUser.roleFromProps})
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push(`/${role}/dashboard/settings`)}>
+                <DropdownMenuItem onClick={() => router.push(`/${currentUser.roleFromProps}/dashboard/settings`)}>
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -229,6 +253,4 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
-}
+    </SidebarProvider

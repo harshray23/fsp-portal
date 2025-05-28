@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import React, { useState } from 'react';
-
-// const mockUser = { imageUrl: undefined };
+import React, { useState, useEffect } from 'react';
+import { getToken } from '@/lib/auth'; // For API call example
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminSettingsPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [apiResponse, setApiResponse] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -26,7 +28,39 @@ export default function AdminSettingsPage() {
 
   const handleProfileSave = () => {
     console.log("Saving admin profile including picture:", avatarPreview);
+    toast({ title: "Profile Saved", description: "Your profile details have been updated." });
   };
+
+  const fetchSecureData = async () => {
+    setApiResponse("Loading...");
+    const token = getToken();
+    if (!token) {
+      setApiResponse("Error: Not logged in or token not found.");
+      toast({ title: "API Error", description: "Not logged in or token not found.", variant: "destructive"});
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/secure-info', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setApiResponse(JSON.stringify(data, null, 2));
+        toast({ title: "API Success", description: "Secure data fetched successfully."});
+      } else {
+        setApiResponse(`Error ${response.status}: ${data.error || 'Failed to fetch secure data'}`);
+        toast({ title: "API Error", description: data.error || 'Failed to fetch secure data', variant: "destructive"});
+      }
+    } catch (error) {
+      console.error("Fetch secure data error:", error);
+      setApiResponse(`Error: ${(error as Error).message}`);
+      toast({ title: "API Error", description: (error as Error).message, variant: "destructive"});
+    }
+  };
+
 
   return (
     <>
@@ -113,6 +147,21 @@ export default function AdminSettingsPage() {
                 <Switch id="email-notifications" checked />
             </div>
             <Button>Save System Preferences</Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Test Protected API</CardTitle>
+          <CardDescription>Click to fetch data from a sample protected API route.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={fetchSecureData}>Fetch Secure Data</Button>
+          {apiResponse && (
+            <pre className="mt-4 p-4 bg-muted rounded-md text-sm overflow-x-auto">
+              <code>{apiResponse}</code>
+            </pre>
+          )}
         </CardContent>
       </Card>
     </>

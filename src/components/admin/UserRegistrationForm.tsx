@@ -22,22 +22,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useMemo, useCallback } from "react"; // Added useMemo, useCallback
+import { useState, useMemo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { registerStaff } from "@/lib/auth"; // Import mock registration
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
   role: z.enum(["admin", "teacher"], { required_error: "Role is required." }),
-  department: z.string().optional(), // Optional, maybe only for teachers
+  department: z.string().optional(),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
 type UserRegistrationFormValues = z.infer<typeof formSchema>;
 
 interface UserRegistrationFormProps {
-  mode: 'admin' | 'teacher'; // To pre-select or customize form
+  mode: 'admin' | 'teacher';
 }
 
 export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
@@ -51,7 +52,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
         email: "harshray2007@gmail.com",
         role: mode,
         department: "CSE(AIML)", 
-        password: "Harsh@2007",
+        password: "Harsh@2007", // Will be hashed on submission
       };
     }
     return {
@@ -59,7 +60,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
       email: "",
       role: mode,
       department: "",
-      password: "",
+      password: "", // Will be hashed
     };
   }, [mode]);
 
@@ -74,14 +75,23 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
 
   async function onSubmit(values: UserRegistrationFormValues) {
     setIsLoading(true);
-    console.log(`Registering new ${values.role}:`, values);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Password will be hashed by registerStaff
+    const result = await registerStaff(values);
     setIsLoading(false);
-    toast({
-      title: "User Registered",
-      description: `${values.name} (${values.role}) has been successfully registered.`,
-    });
-    form.reset(getInitialValues());
+
+    if (result.success) {
+      toast({
+        title: "User Registered",
+        description: `${values.name} (${values.role}) has been successfully registered.`,
+      });
+      form.reset(getInitialValues());
+    } else {
+      toast({
+        title: "Registration Failed",
+        description: result.error || "An unknown error occurred.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

@@ -16,8 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react"; // Added useMemo
+import { useState, useMemo } from "react";
 import { Loader2 } from "lucide-react";
+import { registerStudent } from "@/lib/auth"; // Import mock registration
+import { useToast } from "@/hooks/use-toast";
+
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -44,6 +47,7 @@ type StudentRegistrationFormValues = z.infer<typeof formSchema>;
 export function StudentRegistrationForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const defaultValues = useMemo(() => ({
     studentId: "",
@@ -63,14 +67,25 @@ export function StudentRegistrationForm() {
     defaultValues,
   });
 
-  // Mock registration
   async function onSubmit(values: StudentRegistrationFormValues) {
     setIsLoading(true);
-    console.log("Registering student with:", values);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Password will be hashed by registerStudent (which internally uses bcrypt)
+    const result = await registerStudent(values);
     setIsLoading(false);
-    router.push("/student/login"); 
+
+    if (result.success) {
+      toast({
+        title: "Registration Successful",
+        description: "You can now log in with your Student ID and password.",
+      });
+      router.push("/student/login"); 
+    } else {
+      toast({
+        title: "Registration Failed",
+        description: result.error || "An unknown error occurred.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

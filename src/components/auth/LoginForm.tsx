@@ -17,7 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState, useMemo } from "react"; // Added useMemo
+import { useState, useMemo } from "react";
+import { login } from "@/lib/auth"; // Import new login function
+import { useToast } from "@/hooks/use-toast";
 
 interface LoginFormProps {
   role: 'student' | 'teacher' | 'admin';
@@ -33,10 +35,10 @@ const createFormSchema = (role: LoginFormProps['role']) => {
       if (role !== 'student') { // For admin and teacher, identifier must be an email
         return z.string().email().safeParse(data.identifier).success;
       }
-      return true; // For student, any non-empty string is fine for identifier (studentId)
+      return true; 
     },
     {
-      message: "Invalid email address. Please use a valid email.", // This message applies if role is not student and email is invalid
+      message: "Invalid email address. Please use a valid email.", 
       path: ["identifier"],
     }
   );
@@ -46,29 +48,38 @@ type LoginFormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 export function LoginForm({ role, dashboardPath }: LoginFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const formSchema = useMemo(() => createFormSchema(role), [role]);
 
   const defaultValues = useMemo(() => ({
-    identifier: "",
-    password: "",
-  }), []);
+    identifier: role === 'admin' ? "harshray2007@gmail.com" : "", // Pre-fill admin email
+    password: role === 'admin' ? "Harsh@2007" : "", // Pre-fill admin password
+  }), [role]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
 
-  // Mock login: In a real app, this would call an API
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    console.log(`Logging in ${role} with:`, values);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const result = await login(values.identifier, values.password, role);
     setIsLoading(false);
-    router.push(dashboardPath); 
+
+    if (result.success && result.token) {
+      // In a real app, context or state management would handle user info.
+      // For prototype, DashboardLayout will read from token.
+      router.push(dashboardPath); 
+    } else {
+      toast({
+        title: "Login Failed",
+        description: result.error || "Invalid credentials or an unknown error occurred.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

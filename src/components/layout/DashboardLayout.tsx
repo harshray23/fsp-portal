@@ -2,6 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react'; // Added useState
 import {
   Sidebar,
   SidebarContent,
@@ -33,13 +34,21 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
+} from "@/components/ui/dropdown-menu";
+import { getCurrentUser, logout as authLogout } from '@/lib/auth'; // Auth functions
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardLayoutProps {
   children: ReactNode;
   role: Role;
-  user?: { name?: string; email?: string; imageUrl?: string }; // Optional user prop for avatar
+  // user prop is now derived from token
+}
+
+interface User {
+  name?: string;
+  email?: string;
+  imageUrl?: string;
+  role?: string;
 }
 
 function NavMenuItem({ item, currentPath }: { item: NavItem; currentPath: string }) {
@@ -100,13 +109,35 @@ function NavMenuItem({ item, currentPath }: { item: NavItem; currentPath: string
 }
 
 
-export function DashboardLayout({ children, role, user = { name: "User", email: "user@example.com" } }: DashboardLayoutProps) {
+export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const navItems = getNavItemsByRole(role);
   const pathname = usePathname();
   const router = useRouter();
+  const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      toast({ title: "Unauthorized", description: "Please log in to continue.", variant: "destructive" });
+      router.replace('/'); // Redirect to homepage or specific login page
+      return;
+    }
+    if (user.role !== role) {
+      toast({ title: "Access Denied", description: "You do not have permission to access this page.", variant: "destructive" });
+      authLogout(); // Log out user with incorrect role
+      router.replace('/'); // Redirect to homepage
+      return;
+    }
+    setCurrentUser(user);
+    setIsLoading(false);
+  }, [pathname, role, router, toast]);
 
   const handleLogout = () => {
-    // Mock logout
+    authLogout();
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
     router.push('/');
   };
 
@@ -115,14 +146,28 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
+  if (isLoading) {
+    // You can return a loading spinner or a skeleton layout here
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
+  }
+  
+  if (!currentUser) {
+    // This case should ideally be handled by the redirect in useEffect,
+    // but as a fallback, prevent rendering children if no user.
+    return null; 
+  }
+
+
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen bg-background">
         <Sidebar collapsible="icon" className="border-r">
-          <SidebarHeader className="p-4 flex justify-center items-center"> {/* Adjusted for image centering */}
-             <Logo
-                inSheet={false}
-             />
+          <SidebarHeader className="p-4 flex justify-center items-center">
+             <Logo />
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
@@ -144,26 +189,26 @@ export function DashboardLayout({ children, role, user = { name: "User", email: 
             <div className="md:hidden">
               <SidebarTrigger />
             </div>
-            <div className="flex-1" /> {/* Spacer */}
+            <div className="flex-1" /> 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-9 w-9">
-                    {user.imageUrl ? (
-                       <AvatarImage src={user.imageUrl} alt={user.name || "User"} />
+                    {currentUser.imageUrl ? (
+                       <AvatarImage src={currentUser.imageUrl} alt={currentUser.name || "User"} />
                     ) : (
-                       <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name || "User"} data-ai-hint="user avatar" />
+                       <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(currentUser.name)}`} alt={currentUser.name || "User"} data-ai-hint="user avatar" />
                     )}
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                    <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">{currentUser.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {currentUser.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>

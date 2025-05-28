@@ -30,7 +30,7 @@ export const login = async (identifier: string, passwordPlainText: string, role:
     const userCredential = await signInWithEmailAndPassword(auth, email, passwordPlainText);
     const firebaseUser = userCredential.user;
     
-    const token = await firebaseUser.getIdToken();
+    const token = await firebaseUser.getIdToken(); // This is the Firebase ID Token (a JWT)
     
     // For middleware route protection in this prototype, we set the Firebase ID Token in a client-accessible cookie.
     // PRODUCTION SECURITY (HttpOnly Cookies): For enhanced security against XSS, the Firebase ID Token
@@ -44,6 +44,10 @@ export const login = async (identifier: string, passwordPlainText: string, role:
       secure: process.env.NODE_ENV === 'production', // Transmit only over HTTPS in production
       sameSite: 'lax' // Provides some CSRF protection
     }); 
+
+    // Storing role in localStorage for client-side checks in DashboardLayout (prototype only).
+    // In production, roles should be derived from verified Firebase Custom Claims in the ID token.
+    localStorage.setItem('userRole', role);
 
     // PRODUCTION AUTHORIZATION (Firebase Custom Claims): For robust role-based access control,
     // roles (student, teacher, admin) should be managed using Firebase Custom Claims.
@@ -64,6 +68,7 @@ export const login = async (identifier: string, passwordPlainText: string, role:
   } catch (error: any) {
     console.error("Firebase login error:", error);
     Cookies.remove('authToken', { path: '/' }); 
+    localStorage.removeItem('userRole');
     return { success: false, error: 'Invalid credentials.' }; // Generic error for security
   }
 };
@@ -128,11 +133,13 @@ export const logout = async (): Promise<void> => {
     await firebaseSignOut(auth);
     Cookies.remove('authToken', { path: '/' }); 
     localStorage.removeItem('token'); // Clear any other legacy or non-HttpOnly token
+    localStorage.removeItem('userRole'); // Clear the stored role
   } catch (error) {
     console.error("Firebase logout error:", error);
     // Ensure cookie and localStorage are cleared even if Firebase signout fails
     Cookies.remove('authToken', { path: '/' }); 
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
   }
 };
 
@@ -152,22 +159,25 @@ export const onAuthUserChanged = (callback: (user: FirebaseUser | null) => void)
  * This function only serves to illustrate where backend verification would occur.
  */
 export const verifyToken = (token: string): AppUser | null => {
+  // This is a MOCK placeholder.
+  // In a REAL backend, you would use Firebase Admin SDK to verify the Firebase ID token.
+  // const decodedToken = await admin.auth().verifyIdToken(token);
+  // const userRoleFromClaims = decodedToken.role || 'unknown';
+  // For this demo, we'll assume any non-empty token string passed here is "valid"
+  // and belongs to an admin, as the demo /api/secure-info route expects an admin.
+  // This does NOT represent secure token validation.
   if (!token) {
     return null;
   }
-  // This is a MOCK. A real backend would use Firebase Admin SDK to verify the Firebase ID token.
-  // Example: const decodedToken = await admin.auth().verifyIdToken(token);
-  // Then, it would extract UID, email, and custom claims (for role).
-  // const userRoleFromClaims = decodedToken.role || 'unknown'; 
   
-  // For this demo, we'll assume any non-empty token string passed here is "valid"
-  // and belongs to an admin, as the demo /api/secure-info route expects an admin.
-  // This is a placeholder and does NOT represent secure token validation.
+  // To simulate a backend verifying the token and getting the role (e.g., from custom claims):
+  // For this simplified mock, we are just creating a dummy admin user.
+  // A real implementation would parse the token, verify it, and extract user details.
   return {
-    uid: 'mock-uid-simulating-backend-verification',
-    email: 'simulated-admin-from-backend@example.com', 
-    name: 'Simulated Admin (Backend Mock Verification)',
-    role: 'admin', // Hardcoded for the demo API which checks for 'admin' role
+    uid: 'mock-uid-from-verified-token',
+    email: 'verified-admin@example.com',
+    name: 'Verified Admin (Mock)',
+    role: 'admin', // This is hardcoded for the /api/secure-info demo
   };
 };
 
@@ -179,7 +189,7 @@ export const verifyToken = (token: string): AppUser | null => {
  * 
  * 1. HttpOnly Cookies for Session Tokens:
  *    - The current prototype uses a client-set cookie ('authToken') containing the Firebase ID Token.
- *      This cookie is accessible to client-side JavaScript.
+ *      This cookie is accessible to client-side JavaScript, which is not ideal for production due to XSS risks.
  *    - FOR PRODUCTION: Transition to server-set HttpOnly, Secure, SameSite cookies. This requires a backend
  *      component (e.g., a Next.js API route or Server Action) to:
  *      a. Receive the Firebase ID Token from the client after Firebase SDK login.
@@ -219,8 +229,8 @@ export const verifyToken = (token: string): AppUser | null => {
  *    - Custom claims are then included in the Firebase ID token and can be securely read on the client
  *      (e.g., using `firebaseUser.getIdTokenResult().then(idTokenResult => idTokenResult.claims.role)`)
  *      or server (after token verification via Admin SDK) to make authorization decisions.
- *    - The current prototype passes the role around on the client or infers it contextually, which is
- *      less secure than server-set custom claims.
+ *    - The current prototype uses `localStorage.getItem('userRole')` in `DashboardLayout` for client-side
+ *      role checks, which is a simplification. In production, rely on claims from the verified ID token.
  *
  * This prototype uses Firebase client-side SDK for authentication, which is secure for managing
  * Firebase sessions on the client. The notes above pertain to integrating it with custom backends

@@ -45,7 +45,7 @@ interface DashboardLayoutProps {
   role: Role;
 }
 
-interface AppUser {
+interface AppUserDisplay {
   name?: string | null;
   email?: string | null;
   imageUrl?: string | null;
@@ -115,58 +115,71 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUserDisplay | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
 
   useEffect(() => {
     const unsubscribe = onAuthUserChanged(async (firebaseUser: FirebaseUser | null) => {
+      setIsLoading(true);
       if (firebaseUser) {
-        const token = Cookies.get('authToken');
-        if (!token) {
-          router.replace('/'); 
-          return;
+        const token = Cookies.get('authToken'); // Firebase ID Token
+        // For prototype: role stored in localStorage by login function.
+        // In production: use firebaseUser.getIdTokenResult() to get custom claims for 'role'.
+        // const idTokenResult = await firebaseUser.getIdTokenResult();
+        // const actualUserRole = idTokenResult.claims.role as Role | undefined;
+        const actualUserRole = localStorage.getItem('userRole') as Role | null;
+
+        if (!token) { 
+          await authLogout(); 
+          setCurrentUser(null); // Ensure state is cleared
+          // Redirect will be handled by the 'else' block or middleware
+        } else if (actualUserRole && actualUserRole !== role) {
+          // User is authenticated, but their role (from localStorage/claims)
+          // does not match the role required for this dashboard.
+          router.replace('/forbidden');
+          // Do not set currentUser for this mismatched dashboard
+          setIsLoading(false);
+          return; 
+        } else {
+          // User is authenticated and role matches (or no localStorage role to check against initially)
+          setCurrentUser({
+            name: firebaseUser.displayName || firebaseUser.email,
+            email: firebaseUser.email,
+            imageUrl: firebaseUser.photoURL,
+            roleFromProps: role,
+          });
         }
-        
-        setCurrentUser({
-          name: firebaseUser.displayName || firebaseUser.email,
-          email: firebaseUser.email,
-          imageUrl: firebaseUser.photoURL,
-          roleFromProps: role,
-        });
       } else {
+        // User is not authenticated by Firebase
         setCurrentUser(null);
         let loginPath = '/'; 
         if (role === 'student') loginPath = '/student/login';
         else if (role === 'teacher') loginPath = '/teacher/login';
         else if (role === 'admin') loginPath = '/admin/login';
-        else router.replace('/'); // Fallback to homepage if role is unknown
         
-        // Only push if not already on the target path to avoid loops during initial load
-        if (pathname !== loginPath && loginPath !== '/') {
+        if (pathname !== loginPath) { // Avoid redirect loop if already on login page
            router.replace(loginPath);
-        } else if (loginPath === '/' && pathname !== '/') {
-           router.replace('/');
         }
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [role, router, pathname]); 
+  }, [role, router, pathname]); // Removed toast from dependencies
 
 
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      localStorage.removeItem('token'); // Added as per user request
       await authLogout(); 
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      localStorage.removeItem('token'); // Also clear this if it was ever used
       // onAuthUserChanged listener will handle redirect
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "An error occurred during logout.", variant: "destructive"});
-      setIsLoading(false); // Ensure loading state is reset on error
+      setIsLoading(false); 
     }
   };
 
@@ -183,30 +196,13 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     );
   }
   
-  if (!currentUser && !isLoading) { 
-     let loginPath = '/'; 
-     if (role === 'student') loginPath = '/student/login';
-     else if (role === 'teacher') loginPath = '/teacher/login';
-     else if (role === 'admin') loginPath = '/admin/login';
-     else loginPath = '/'; // Fallback
-     
-     // Conditional redirect to prevent loops if already on login page or homepage
-     if ((pathname !== loginPath && loginPath !== '/') || (loginPath === '/' && pathname !== '/')) {
-        router.replace(loginPath);
-     }
+  // If still no current user after loading, it implies a redirect is or should be happening.
+  // This can happen if the /forbidden redirect is triggered.
+  if (!currentUser) { 
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
-    );
-  }
-  
-  if (!currentUser) { 
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Redirecting...</p>
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
     );
   }
 
@@ -283,3 +279,4 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     </SidebarProvider>
   );
 }
+

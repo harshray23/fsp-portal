@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react'; // Added useMemo
 import { useToast } from '@/hooks/use-toast';
 
 interface TeacherUser {
@@ -17,14 +17,15 @@ interface TeacherUser {
   department: string;
 }
 
-const initialMockTeachers: TeacherUser[] = [
+const generateInitialMockTeachers = (): TeacherUser[] => [
   { id: 'teacher1', name: 'Dr. Alan Turing', email: 'alan.turing@aec.edu.in', department: 'Computer Science' },
   { id: 'teacher2', name: 'Prof. Marie Curie', email: 'marie.curie@aec.edu.in', department: 'Physics & Chemistry' },
   { id: 'teacher3', name: 'Dr. Ada Lovelace', email: 'ada.lovelace@aec.edu.in', department: 'Mathematics & Computing' },
 ];
 
 export default function RegisterTeacherPage() {
-  const [teachers, setTeachers] = useState<TeacherUser[]>(initialMockTeachers);
+  const initialTeachers = useMemo(() => generateInitialMockTeachers(), []);
+  const [teachers, setTeachers] = useState<TeacherUser[]>(initialTeachers);
   const { toast } = useToast();
 
   const handleDeleteTeacher = (teacherId: string) => {

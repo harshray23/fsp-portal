@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react"; // Added useMemo, useCallback
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,17 +44,16 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const getInitialValues = () => {
+  const getInitialValues = useCallback(() => {
     if (mode === 'admin') {
       return {
         name: "Harsh Ray",
         email: "harshray2007@gmail.com",
         role: mode,
-        department: "CSE(AIML)", // Will be in form state, though field might be hidden for admin
+        department: "CSE(AIML)", 
         password: "Harsh@2007",
       };
     }
-    // For teacher mode, or any other case, use existing defaults
     return {
       name: "",
       email: "",
@@ -62,27 +61,26 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
       department: "",
       password: "",
     };
-  };
+  }, [mode]);
+
+  const defaultValues = useMemo(() => getInitialValues(), [getInitialValues]);
 
   const form = useForm<UserRegistrationFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: getInitialValues(),
+    defaultValues,
   });
   
   const selectedRole = form.watch("role");
 
-  // Mock registration
   async function onSubmit(values: UserRegistrationFormValues) {
     setIsLoading(true);
     console.log(`Registering new ${values.role}:`, values);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsLoading(false);
     toast({
       title: "User Registered",
       description: `${values.name} (${values.role}) has been successfully registered.`,
     });
-    // Reset to initial default values based on mode after submission
     form.reset(getInitialValues());
   }
 
@@ -123,7 +121,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={true}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={true}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a role" />
@@ -145,7 +143,7 @@ export function UserRegistrationForm({ mode }: UserRegistrationFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Department</FormLabel>
-                    <FormControl><Input placeholder="e.g., Computer Science" {...field} /></FormControl>
+                    <FormControl><Input placeholder="e.g., Computer Science" {...field} value={field.value || ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

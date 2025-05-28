@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, User, Shield, BookOpen } from 'lucide-react';
 import { Logo } from '@/components/common/Logo';
-import React from 'react'; // Import React for React.memo
+import React, { useMemo } from 'react'; // Import React for React.memo and useMemo
 
 interface RoleCardProps {
   title: string;
@@ -43,6 +43,8 @@ RoleCard.displayName = 'RoleCard';
 
 
 export default function RoleSelectionPage() {
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-br from-background to-secondary">
       <div className="text-center mb-12">
@@ -76,7 +78,7 @@ export default function RoleSelectionPage() {
         />
       </div>
       <footer className="mt-16 text-center text-muted-foreground text-sm">
-        &copy; {new Date().getFullYear()} Asansol Engineering College. All rights reserved.
+        &copy; {currentYear} Asansol Engineering College. All rights reserved.
       </footer>
     </main>
   );

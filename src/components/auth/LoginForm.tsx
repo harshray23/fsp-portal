@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react"; // Added useMemo
 
 interface LoginFormProps {
   role: 'student' | 'teacher' | 'admin';
@@ -49,14 +49,16 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const formSchema = createFormSchema(role);
+  const formSchema = useMemo(() => createFormSchema(role), [role]);
+
+  const defaultValues = useMemo(() => ({
+    identifier: "",
+    password: "",
+  }), []);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      identifier: "",
-      password: "",
-    },
+    defaultValues,
   });
 
   // Mock login: In a real app, this would call an API

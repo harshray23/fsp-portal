@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react"; // Added useMemo
 import { Loader2 } from "lucide-react";
 
 const phoneRegex = new RegExp(
@@ -44,20 +45,22 @@ export function StudentRegistrationForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
+  const defaultValues = useMemo(() => ({
+    studentId: "",
+    name: "",
+    email: "",
+    rollNumber: "",
+    registrationNumber: "",
+    department: "",
+    phoneNumber: "",
+    whatsappNumber: "",
+    password: "",
+    confirmPassword: "",
+  }), []);
+
   const form = useForm<StudentRegistrationFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      studentId: "",
-      name: "",
-      email: "",
-      rollNumber: "",
-      registrationNumber: "",
-      department: "",
-      phoneNumber: "",
-      whatsappNumber: "",
-      password: "",
-      confirmPassword: "",
-    },
+    defaultValues,
   });
 
   // Mock registration

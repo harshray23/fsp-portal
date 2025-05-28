@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react'; // Added useMemo
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminUser {
@@ -16,8 +16,7 @@ interface AdminUser {
   email: string;
 }
 
-// Initial mock admins, including the default one
-const initialMockAdmins: AdminUser[] = [
+const generateInitialMockAdmins = (): AdminUser[] => [
   { id: 'admin_default_harsh', name: 'Harsh Ray', email: 'harshray2007@gmail.com' },
   { id: 'admin_jane_doe', name: 'Jane Admington', email: 'jane.admington@aec.edu.in' },
   { id: 'admin_john_smith', name: 'John Smithson', email: 'john.smithson@aec.edu.in' },
@@ -25,11 +24,11 @@ const initialMockAdmins: AdminUser[] = [
 
 
 export default function RegisterAdminPage() {
-  const [admins, setAdmins] = useState<AdminUser[]>(initialMockAdmins);
+  const initialAdmins = useMemo(() => generateInitialMockAdmins(), []);
+  const [admins, setAdmins] = useState<AdminUser[]>(initialAdmins);
   const { toast } = useToast();
 
   const handleDeleteAdmin = (adminId: string) => {
-    // Prevent deleting the primary default admin for this example
     if (adminId === 'admin_default_harsh' && admins.find(a => a.id === adminId)?.email === 'harshray2007@gmail.com') {
       toast({
         title: "Deletion Restricted",
@@ -87,7 +86,7 @@ export default function RegisterAdminPage() {
                         size="icon" 
                         className="text-destructive hover:text-destructive"
                         onClick={() => handleDeleteAdmin(admin.id)}
-                        disabled={admin.id === 'admin_default_harsh' && admin.email === 'harshray2007@gmail.com'} // Optionally disable for the specific default
+                        disabled={admin.id === 'admin_default_harsh' && admin.email === 'harshray2007@gmail.com'}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

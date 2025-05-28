@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Added useMemo
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -41,7 +41,6 @@ const scheduleEntrySchema = z.object({
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time (HH:MM)"),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time (HH:MM)")
     .refine(data => {
-      // Basic validation: end time must be after start time
       if (data.startTime && data.endTime) {
         return data.endTime > data.startTime;
       }
@@ -59,25 +58,26 @@ export default function ManageTimetablesPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  const formDefaultValues = useMemo(() => ({
+    batch: "",
+    day: "",
+    startTime: "",
+    endTime: "",
+    subject: "",
+    room: "",
+  }), []);
+
   const form = useForm<ScheduleEntryFormValues>({
     resolver: zodResolver(scheduleEntrySchema),
-    defaultValues: {
-      batch: "",
-      day: "",
-      startTime: "",
-      endTime: "",
-      subject: "",
-      room: "",
-    },
+    defaultValues: formDefaultValues,
   });
 
   async function onSubmit(values: ScheduleEntryFormValues) {
     setIsLoading(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const newEntry: TimetableEntry = {
-      id: `TT-${Date.now()}`, // Simple unique ID
+      id: `TT-${Date.now()}`, 
       ...values,
       status: 'Scheduled',
     };
@@ -88,15 +88,14 @@ export default function ManageTimetablesPage() {
     });
     setIsLoading(false);
     setIsDialogOpen(false);
-    form.reset();
+    form.reset(formDefaultValues);
   }
   
-  // Effect to reset form when dialog closes, if needed
   useEffect(() => {
     if (!isDialogOpen) {
-      form.reset();
+      form.reset(formDefaultValues);
     }
-  }, [isDialogOpen, form]);
+  }, [isDialogOpen, form, formDefaultValues]);
 
   return (
     <>
@@ -119,30 +118,42 @@ export default function ManageTimetablesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label htmlFor="batch">Batch</Label>
-                    <Select onValueChange={(value) => form.setValue('batch', value)} defaultValue={form.getValues('batch')}>
-                      <SelectTrigger id="batch">
-                        <SelectValue placeholder="Select Batch" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockBatches.map(batch => (
-                          <SelectItem key={batch.id} value={batch.name}>{batch.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="batch"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger id="batch">
+                            <SelectValue placeholder="Select Batch" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {mockBatches.map(batch => (
+                              <SelectItem key={batch.id} value={batch.name}>{batch.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                     {form.formState.errors.batch && <p className="text-xs text-destructive">{form.formState.errors.batch.message}</p>}
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="day">Day of Week</Label>
-                    <Select onValueChange={(value) => form.setValue('day', value)} defaultValue={form.getValues('day')}>
-                      <SelectTrigger id="day">
-                        <SelectValue placeholder="Select Day" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {daysOfWeek.map(day => (
-                          <SelectItem key={day} value={day}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                     <Controller
+                        name="day"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger id="day">
+                              <SelectValue placeholder="Select Day" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {daysOfWeek.map(day => (
+                                <SelectItem key={day} value={day}>{day}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     {form.formState.errors.day && <p className="text-xs text-destructive">{form.formState.errors.day.message}</p>}
                   </div>
                 </div>
@@ -240,3 +251,4 @@ export default function ManageTimetablesPage() {
     </>
   );
 }
+

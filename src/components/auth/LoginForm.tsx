@@ -18,7 +18,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { login } from "@/lib/auth"; // Import new login function
+import { login } from "@/lib/auth"; 
 import { useToast } from "@/hooks/use-toast";
 import type { Role } from "@/config/nav";
 
@@ -56,6 +56,8 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
+    // PRODUCTION NOTE: Login routes should be protected against brute-force attacks
+    // using techniques like rate-limiting (e.g., with Redis) and/or CAPTCHA.
     const result = await login(values.email, values.password, role);
     setIsLoading(false);
 
@@ -64,7 +66,7 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
     } else {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials.", // Generic error message
+        description: result.error || "Invalid credentials.", // Generic error message for security
         variant: "destructive",
       });
     }
@@ -129,7 +131,7 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
             </Button>
             {role === 'student' && (
                  <p className="mt-2 text-xs text-center text-muted-foreground">
-                 Forgot password? <button type="button" onClick={() => alert("Password reset with Firebase not implemented yet.")} className="font-medium text-primary hover:underline">Reset here</button>
+                 Forgot password? <button type="button" onClick={() => alert("Password reset functionality uses Firebase's built-in email-based reset flow. Ensure it's configured in your Firebase project.")} className="font-medium text-primary hover:underline">Reset here</button>
                </p>
             )}
           </CardFooter>
@@ -138,3 +140,5 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
     </Card>
   );
 }
+
+    

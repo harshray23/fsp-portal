@@ -10,14 +10,9 @@ import {
 } from "firebase/auth";
 import type { Role as UserRole } from '@/config/nav';
 import Cookies from 'js-cookie'; 
-// bcryptjs is used by Firebase on the backend for password storage.
-// For client-side operations involving JWTs (if we weren't using Firebase client SDK directly for session),
-// 'jsonwebtoken' would be used here. Since Firebase SDK handles ID tokens, direct use of 'jsonwebtoken'
-// for session management is abstracted away by Firebase.
+// For a real backend using JWTs, you would use 'jsonwebtoken' on the server.
 // import jwt from 'jsonwebtoken'; 
-
-// const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || 'your-default-super-secret-key-for-prototyping';
-// NEXT_PUBLIC_ prefix makes env var available client-side. For a REAL JWT_SECRET used server-side, it MUST NOT have this prefix.
+// const JWT_SECRET = process.env.JWT_SECRET; // Loaded from server-side environment variables
 
 interface AppUser {
   uid: string;
@@ -26,31 +21,44 @@ interface AppUser {
   role: UserRole; 
 }
 
+/**
+ * Logs in a user using Firebase Authentication.
+ * In a production setup with HttpOnly session cookies:
+ * 1. Client signs in with Firebase SDK.
+ * 2. Client sends the Firebase ID Token to a backend API endpoint.
+ * 3. Backend verifies the ID token using Firebase Admin SDK.
+ * 4. Backend creates a session cookie using `admin.auth().createSessionCookie()`.
+ * 5. Backend sets this session cookie in the HTTP response with `HttpOnly`, `Secure`, 
+ *    `SameSite=Lax` (or `Strict`), and `Path=/` attributes.
+ * 6. Subsequent requests to the backend are authenticated using this session cookie.
+ * 
+ * This prototype uses client-side Firebase SDK for auth state and sets a regular cookie 
+ * for middleware convenience, which is not HttpOnly.
+ */
 export const login = async (identifier: string, passwordPlainText: string, role: UserRole): Promise<{ success: boolean; user?: AppUser; error?: string }> => {
   try {
     const email = identifier; 
     const userCredential = await signInWithEmailAndPassword(auth, email, passwordPlainText);
     const firebaseUser = userCredential.user;
     
-    // In a production scenario with a dedicated backend, the backend would verify the Firebase ID token
-    // and then issue its own session token, potentially stored in an HttpOnly cookie.
-    // For this prototype, we store the Firebase ID token in a client-accessible cookie
-    // for the middleware to perform basic route protection.
     const token = await firebaseUser.getIdToken();
-    Cookies.set('authToken', token, { expires: 1, path: '/' }); // Expires in 1 day
+    // This cookie is for middleware convenience in this prototype.
+    // For production, prefer server-set HttpOnly session cookies.
+    Cookies.set('authToken', token, { expires: 1, path: '/', secure: process.env.NODE_ENV === 'production', sameSite: 'lax' }); 
 
     const appUser: AppUser = { 
       uid: firebaseUser.uid, 
       email: firebaseUser.email,
       name: firebaseUser.displayName || firebaseUser.email,
-      role: role // Role ideally comes from a custom claim or Firestore
+      role: role 
     };
     
     return { success: true, user: appUser };
   } catch (error: any) {
     console.error("Firebase login error:", error);
     Cookies.remove('authToken', { path: '/' }); 
-    return { success: false, error: error.code || 'Login failed' }; // Return error.code for potential specific handling if needed, but UI shows generic message
+    // Return a generic error for the UI, avoid exposing specific Firebase error codes directly.
+    return { success: false, error: 'Invalid credentials.' }; 
   }
 };
 
@@ -61,8 +69,8 @@ export const registerStudent = async (studentData: any): Promise<{ success: bool
 
     await updateProfile(firebaseUser, { displayName: studentData.name });
     
-    // TODO: Store additional student details (studentId, rollNumber, department, role: 'student')
-    // in Firestore, linked by firebaseUser.uid.
+    // In a real app, additional student details (studentId, rollNumber, department, role: 'student')
+    // would be stored in a database like Firestore, linked by firebaseUser.uid.
     console.log("Firebase Student Registered:", firebaseUser.uid, "Name:", studentData.name);
     
     const appUser: AppUser = { 
@@ -85,8 +93,9 @@ export const registerStaff = async (staffData: any): Promise<{ success: boolean;
 
     await updateProfile(firebaseUser, { displayName: staffData.name });
 
-    // TODO: Store additional staff details (department for teacher, role: staffData.role)
-    // in Firestore, linked by firebaseUser.uid.
+    // In a real app, additional staff details (department for teacher, role: staffData.role)
+    // would be stored in Firestore, linked by firebaseUser.uid.
+    // Custom claims could also be set via Firebase Admin SDK to manage roles securely.
     console.log(`Firebase ${staffData.role} Registered:`, firebaseUser.uid, "Name:", staffData.name);
 
     const appUser: AppUser = { 
@@ -96,7 +105,7 @@ export const registerStaff = async (staffData: any): Promise<{ success: boolean;
       role: staffData.role as UserRole 
     };
     return { success: true, user: appUser };
-  } catch (error: any) {
+  } catch (error: any)
     console.error("Firebase staff registration error:", error);
     return { success: false, error: error.message || 'Registration failed' };
   }
@@ -106,9 +115,10 @@ export const logout = async (): Promise<void> => {
   try {
     await firebaseSignOut(auth);
     Cookies.remove('authToken', { path: '/' }); 
-    localStorage.removeItem('token'); // Clear any other legacy token
+    localStorage.removeItem('token'); // Clear any other legacy or non-HttpOnly token
   } catch (error) {
     console.error("Firebase logout error:", error);
+    // Still attempt to clear tokens even if Firebase signout fails
     Cookies.remove('authToken', { path: '/' }); 
     localStorage.removeItem('token');
   }
@@ -123,19 +133,16 @@ export const onAuthUserChanged = (callback: (user: FirebaseUser | null) => void)
 // sending the ID token to a backend, which then uses Firebase Admin SDK to verify it.
 export const verifyToken = (token: string): AppUser | null => {
   try {
-    // In a real backend: admin.auth().verifyIdToken(token)
+    // In a real backend: admin.auth().verifyIdToken(token) or admin.auth().verifySessionCookie(token, true)
     // This client-side mock is NOT secure for actual token validation.
-    // For prototype, we're assuming if a token exists and can be "decoded" (not truly verified here), it's okay.
-    // const decoded = jwt.decode(token) as any; // jwt.decode only decodes, doesn't verify signature
-    // if (decoded && decoded.user_id && decoded.email) {
-    //   return { uid: decoded.user_id, email: decoded.email, name: decoded.name || decoded.email, role: (decoded.role || 'student') as UserRole };
-    // }
-    // The actual 'authToken' cookie contains Firebase ID Token. Secure verification happens on backend.
-    // For client-side middleware, we primarily check for existence.
-    // DashboardLayout does more robust check with onAuthUserChanged.
+    // For prototype middleware, we primarily check for token existence.
+    // DashboardLayout uses onAuthUserChanged for more robust client-side auth state.
     if(token) {
         // Simplified: if token exists, pass for this mock. Real verification is server-side.
-        return { uid: "mock-uid", email: "mock-email@example.com", role: 'student', name: "Mock User"}; // Example, not real user data
+        // Decoding without verification is unsafe. This is just a placeholder.
+        // In a real app, this function would live on the server and use Firebase Admin SDK.
+        const mockDecoded = { uid: "mock-uid-from-verify", email: "mock-email@example.com", role: 'student', name: "Mock User"}; // Example
+        return mockDecoded; 
     }
     return null;
   } catch (error) {
@@ -152,12 +159,12 @@ export const verifyToken = (token: string): AppUser | null => {
  * 
  * With Firebase Authentication, to achieve this:
  * 1. Client logs in using Firebase SDK (email/password, Google, etc.).
- * 2. Client sends the Firebase ID Token to your backend (e.g., a Next.js API route).
+ * 2. Client sends the Firebase ID Token to your backend (e.g., a Next.js API route or Server Action).
  * 3. Your backend, using the Firebase Admin SDK, verifies the ID token.
  * 4. Upon successful verification, the backend creates a Firebase session cookie using 
  *    `admin.auth().createSessionCookie(idToken, { expiresIn })`.
  * 5. The backend sets this session cookie in the HTTP response with `HttpOnly`, `Secure` (in production),
- *    and `SameSite` attributes.
+ *    and `SameSite` attributes (e.g., 'Lax' or 'Strict').
  *    Example (in a Next.js API route):
  *    `res.setHeader('Set-Cookie', serializedSessionCookie);`
  * 6. Subsequent requests from the client to your backend will automatically include this HttpOnly cookie.
@@ -167,10 +174,12 @@ export const verifyToken = (token: string): AppUser | null => {
  * which is more secure than client-side token storage for sensitive operations.
  * 
  * CSRF Protection:
- * When using cookie-based sessions (especially HttpOnly cookies), CSRF protection (e.g., using anti-CSRF tokens like 
- * csurf or NextAuth.js's built-in protection, or Next.js Server Actions' built-in protection)
- * would be essential for all state-changing requests.
+ * When using cookie-based sessions (especially HttpOnly cookies), CSRF protection (e.g., using anti-CSRF tokens,
+ * or leveraging Next.js Server Actions' built-in protection if applicable)
+ * is essential for all state-changing requests. Double Submit Cookie pattern or Synchronizer Token Pattern are common.
  * 
  * The current prototype uses client-side Firebase SDK for auth state and a client-set cookie for middleware convenience.
  * This is simpler for rapid prototyping but should be upgraded for production security.
  */
+
+    

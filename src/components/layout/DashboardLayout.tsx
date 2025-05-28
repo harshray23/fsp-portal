@@ -23,7 +23,7 @@ import { getNavItemsByRole } from '@/config/nav';
 import { Logo } from '@/components/common/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, ChevronDown, ChevronUp } from 'lucide-react';
+import { LogOut, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'; // Added Loader2
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';

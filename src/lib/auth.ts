@@ -1,3 +1,4 @@
+
 // THIS IS A MOCK AUTHENTICATION SERVICE FOR PROTOTYPING
 // DO NOT USE IN PRODUCTION AS-IS.
 // Real applications require a secure backend for authentication.
@@ -5,7 +6,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Cookies from 'js-cookie'; // For managing cookies
-import type { UserRole } from '@/config/nav'; // Assuming UserRole is defined in nav.ts, adjust if not
+import type { Role as UserRole } from '@/config/nav'; // Assuming UserRole is defined in nav.ts, adjust if not
 
 // Mock user storage - In a real app, this would be a database.
 // Passwords for admin/teacher should be pre-hashed.

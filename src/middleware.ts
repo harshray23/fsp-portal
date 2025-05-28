@@ -17,8 +17,6 @@ export function middleware(request: NextRequest) {
   // If a token exists, let the request proceed.
   // Further role-based validation and token content verification
   // will be handled client-side in DashboardLayout.tsx or by API routes.
-  // For true server-side protection, this middleware could be extended to
-  // verify the token (e.g., using Firebase Admin SDK if it's a Firebase ID token).
   return NextResponse.next();
 }
 

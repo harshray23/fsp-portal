@@ -38,7 +38,12 @@ export const login = async (identifier: string, passwordPlainText: string, role:
     
     // Storing the Firebase ID Token in a client-accessible cookie for middleware.
     // PRODUCTION SECURITY NOTE on HttpOnly cookies is detailed below.
-    Cookies.set('authToken', token, { expires: 1, path: '/', secure: process.env.NODE_ENV === 'production', sameSite: 'lax' }); 
+    Cookies.set('authToken', token, { 
+      expires: 1, // 1 day
+      path: '/', 
+      secure: process.env.NODE_ENV === 'production', // Transmit only over HTTPS in production
+      sameSite: 'lax' // Provides some CSRF protection
+    }); 
 
     const appUser: AppUser = { 
       uid: firebaseUser.uid, 
@@ -111,6 +116,7 @@ export const logout = async (): Promise<void> => {
     localStorage.removeItem('token'); // Clear any other legacy or non-HttpOnly token
   } catch (error) {
     console.error("Firebase logout error:", error);
+    // Ensure cookie and localStorage are cleared even if Firebase signout fails
     Cookies.remove('authToken', { path: '/' }); 
     localStorage.removeItem('token');
   }
@@ -160,7 +166,10 @@ export const verifyToken = (token: string): AppUser | null => {
  *      a. Receive the Firebase ID Token from the client after Firebase SDK login.
  *      b. Verify this ID Token using the Firebase Admin SDK (`admin.auth().verifyIdToken(idToken)`).
  *      c. Create a Firebase session cookie using `admin.auth().createSessionCookie(idToken, { expiresIn })`.
- *      d. Set this session cookie in the HTTP response with `HttpOnly`, `Secure`, and `SameSite` attributes.
+ *         (Example: `const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days`)
+ *      d. Set this session cookie in the HTTP response with `HttpOnly`, `Secure`, and `SameSite=Lax` (or `Strict`) attributes.
+ *         Example with Next.js API route:
+ *         `res.setHeader('Set-Cookie', sessionCookie, { httpOnly: true, secure: process.env.NODE_ENV === 'production', path: '/', sameSite: 'lax' });`
  *    - The middleware would then verify this server-set HttpOnly session cookie using 
  *      `admin.auth().verifySessionCookie(sessionCookie, true)` via the Firebase Admin SDK.
  *    - This protects the session token from XSS attacks.
@@ -177,15 +186,14 @@ export const verifyToken = (token: string): AppUser | null => {
  *      (e.g., using anti-CSRF tokens like the double submit cookie pattern or synchronizer token pattern)
  *      is essential for all state-changing requests (POST, PUT, DELETE).
  *    - Next.js Server Actions have built-in CSRF protection. For traditional API routes with cookies,
- *      manual implementation or a library is needed.
- * 
+ *      manual implementation or a library (like `csurf` if using Express) is needed.
+ *
  * 4. Rate Limiting & CAPTCHA for Login/Registration:
  *    - Implement rate limiting on login and registration endpoints to prevent brute-force attacks.
  *    - Consider CAPTCHA challenges after several failed attempts.
- *    - This requires backend logic.
+ *    - This requires backend logic (e.g., using `rate-limiter-flexible` with a store like Redis).
  *
  * This prototype uses Firebase client-side SDK for authentication, which is secure for managing
  * Firebase sessions on the client. The notes above pertain to integrating it with custom backends
  * or server-side logic for enhanced security, especially regarding HttpOnly cookies and middleware verification.
  */
-

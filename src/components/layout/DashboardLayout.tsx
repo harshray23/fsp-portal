@@ -122,23 +122,12 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   useEffect(() => {
     const unsubscribe = onAuthUserChanged(async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // User is signed in.
-        // TODO: In a real app, fetch user's role from Firestore or custom claims.
-        // For this prototype, we'll trust the 'role' prop passed to DashboardLayout.
-        // This is a simplification and not secure for actual role enforcement.
-        // A mismatch check could be: if (userRoleFromDB !== role) { /* redirect or deny */ }
-
-        // Simulating fetching actual role - for now, just check if the cookie exists
-        // as a basic check for the middleware having allowed access.
         const token = Cookies.get('authToken');
         if (!token) {
-          // This case should ideally be caught by middleware, but as a fallback:
-          router.replace('/'); // Redirect to home if no token, even if Firebase user exists
+          router.replace('/'); 
           return;
         }
         
-        // TODO: Verify token if needed, and fetch role from token or Firestore.
-        // For now, assuming the role prop is the source of truth after middleware pass.
         setCurrentUser({
           name: firebaseUser.displayName || firebaseUser.email,
           email: firebaseUser.email,
@@ -146,32 +135,38 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           roleFromProps: role,
         });
       } else {
-        // User is signed out.
         setCurrentUser(null);
-        // Middleware should handle redirecting to login, but as a fallback:
         let loginPath = '/'; 
         if (role === 'student') loginPath = '/student/login';
         else if (role === 'teacher') loginPath = '/teacher/login';
         else if (role === 'admin') loginPath = '/admin/login';
-        router.replace(loginPath);
+        else router.replace('/'); // Fallback to homepage if role is unknown
+        
+        // Only push if not already on the target path to avoid loops during initial load
+        if (pathname !== loginPath && loginPath !== '/') {
+           router.replace(loginPath);
+        } else if (loginPath === '/' && pathname !== '/') {
+           router.replace('/');
+        }
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [role]); // Dependency: only re-run if role changes
+  }, [role, router, pathname]); 
 
 
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      await authLogout(); // This will clear the cookie as well
+      localStorage.removeItem('token'); // Added as per user request
+      await authLogout(); 
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
       // onAuthUserChanged listener will handle redirect
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "An error occurred during logout.", variant: "destructive"});
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading state is reset on error
     }
   };
 
@@ -188,15 +183,17 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     );
   }
   
-  if (!currentUser && !isLoading) { // If done loading and still no user, redirect (should be handled by effect)
-    // This state implies onAuthUserChanged determined no user, and redirection should occur.
-    // To prevent brief flash of content, a loader is shown, or redirect handled by effect.
-    // If middleware is working, this might not even be hit often for dashboard routes.
+  if (!currentUser && !isLoading) { 
      let loginPath = '/'; 
      if (role === 'student') loginPath = '/student/login';
      else if (role === 'teacher') loginPath = '/teacher/login';
      else if (role === 'admin') loginPath = '/admin/login';
-     router.replace(loginPath);
+     else loginPath = '/'; // Fallback
+     
+     // Conditional redirect to prevent loops if already on login page or homepage
+     if ((pathname !== loginPath && loginPath !== '/') || (loginPath === '/' && pathname !== '/')) {
+        router.replace(loginPath);
+     }
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -204,13 +201,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     );
   }
   
-  // If currentUser is null but still loading, the loader above handles it.
-  // If currentUser exists, render the dashboard.
   if (!currentUser) { 
-    // This is a safeguard, should ideally be handled by the isLoading state or the redirect logic.
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Redirecting to login...</p>
+        <p>Redirecting...</p>
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );

@@ -28,9 +28,17 @@ interface LoginFormProps {
 }
 
 const createFormSchema = (role: LoginFormProps['role']) => {
-  return z.object({
-    email: z.string().email({ message: "Valid email is required." }),
+  const schema = z.object({
     password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  });
+
+  if (role === 'student') {
+    return schema.extend({
+      identifier: z.string().min(1, { message: "Student ID is required." }), // Student ID
+    });
+  }
+  return schema.extend({
+    identifier: z.string().email({ message: "Valid email is required." }), // Email for admin/teacher
   });
 };
 
@@ -45,7 +53,7 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
   const formSchema = useMemo(() => createFormSchema(role), [role]);
 
   const defaultValues = useMemo(() => ({
-    email: role === 'admin' ? "harshray2007@gmail.com" : "", 
+    identifier: role === 'admin' ? "harshray2007@gmail.com" : "", 
     password: role === 'admin' ? "Harsh@2007" : "",
   }), [role]);
 
@@ -56,9 +64,12 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    // PRODUCTION NOTE: Login routes should be protected against brute-force attacks
-    // using techniques like rate-limiting (e.g., with Redis) and/or CAPTCHA.
-    const result = await login(values.email, values.password, role);
+    // PRODUCTION SECURITY NOTE:
+    // Login routes should be protected against brute-force attacks.
+    // Implement rate limiting (e.g., with Redis/rate-limiter-flexible on the backend)
+    // and consider CAPTCHA challenges (e.g., Google reCAPTCHA) after several failed attempts.
+    // This requires backend logic and cannot be fully implemented client-side.
+    const result = await login(values.identifier, values.password, role);
     setIsLoading(false);
 
     if (result.success && result.user) {
@@ -66,7 +77,7 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
     } else {
       toast({
         title: "Login Failed",
-        description: result.error || "Invalid credentials.", // Generic error message for security
+        description: "Invalid credentials.", // Generic error message for security
         variant: "destructive",
       });
     }
@@ -79,15 +90,15 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
           <CardContent className="space-y-4 pt-6">
             <FormField
               control={form.control}
-              name="email" 
+              name="identifier" 
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{role === 'student' ? 'Student Email' : 'Email'}</FormLabel> 
+                  <FormLabel>{role === 'student' ? 'Student ID' : 'Email'}</FormLabel> 
                   <FormControl>
                     <Input 
-                      placeholder={role === 'student' ? 'Enter your registered email' : 'your.email@example.com'} 
+                      placeholder={role === 'student' ? 'Enter your Student ID' : 'your.email@example.com'} 
                       {...field} 
-                      type="email"
+                      type={role === 'student' ? 'text' : 'email'}
                     />
                   </FormControl>
                   <FormMessage />
@@ -140,5 +151,3 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
     </Card>
   );
 }
-
-    

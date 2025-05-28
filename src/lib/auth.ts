@@ -3,7 +3,8 @@
 // Real applications require a secure backend for authentication.
 
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken'; // Import jsonwebtoken
+import jwt from 'jsonwebtoken';
+import Cookies from 'js-cookie'; // For managing cookies
 import type { UserRole } from '@/config/nav'; // Assuming UserRole is defined in nav.ts, adjust if not
 
 // Mock user storage - In a real app, this would be a database.
@@ -15,8 +16,6 @@ const mockUsers = [
 ];
 
 // In a real backend, JWT signing would use a secret from environment variables
-// The .env file might contain: JWT_SECRET=your_super_secret_key_here
-// Ensure this is set in your deployment environment.
 const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || 'your-default-dev-secret-key';
 // Note: Using NEXT_PUBLIC_ for client-side access for this prototype's mock.
 // In a real app, JWT_SECRET should NOT be prefixed with NEXT_PUBLIC_ and only used server-side.
@@ -51,7 +50,10 @@ export const login = async (identifier: string, passwordPlainText: string, role:
     if (user && user.password === passwordPlainText) { // Plain text check for student mock
       const tokenPayload: TokenPayload = { id: user.id, role: user.role, name: user.name };
       const token = createActualToken(tokenPayload);
-      if (typeof window !== 'undefined') localStorage.setItem('authToken', token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', token);
+        Cookies.set('authToken', token, { expires: 1/24, path: '/' }); // Expires in 1 hour
+      }
       return { success: true, token, user: { name: user.name, email: user.studentId, role: user.role } };
     }
   } else { // Admin or Teacher
@@ -59,7 +61,10 @@ export const login = async (identifier: string, passwordPlainText: string, role:
     if (user && user.passwordHash && bcrypt.compareSync(passwordPlainText, user.passwordHash)) {
       const tokenPayload: TokenPayload = { id: user.id, role: user.role, name: user.name };
       const token = createActualToken(tokenPayload);
-      if (typeof window !== 'undefined') localStorage.setItem('authToken', token);
+       if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', token);
+        Cookies.set('authToken', token, { expires: 1/24, path: '/' }); // Expires in 1 hour
+      }
       return { success: true, token, user: { name: user.name, email: user.email, role: user.role } };
     }
   }
@@ -86,22 +91,23 @@ export const registerStaff = async (staffData: any): Promise<{ success: boolean;
 export const logout = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('authToken');
+    Cookies.remove('authToken', { path: '/' });
   }
 };
 
 export const getToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken'); // DashboardLayout primarily uses this
   }
   return null;
 };
 
 export const getCurrentUser = (): TokenPayload & { email?: string } | null => {
-  const token = getToken();
+  const token = getToken(); // Reads from localStorage
   if (token) {
     const decoded = verifyActualToken(token);
     if(decoded) {
-      // Find the full user details from mockUsers to get email if not in token (though it should be for admin/teacher)
+      // Find the full user details from mockUsers to get email if not in token
       const userFromDb = mockUsers.find(u => u.id === decoded.id);
       return {
         ...decoded,
@@ -112,21 +118,22 @@ export const getCurrentUser = (): TokenPayload & { email?: string } | null => {
   return null;
 };
 
-// For API route protection example
+// For API route protection example (uses Bearer token from header)
 export const verifyToken = (token: string): TokenPayload | null => {
-  // This function is intended for server-side verification in API routes
-  // It now uses the actual JWT verification
   return verifyActualToken(token);
 };
 
 /**
  * SECURITY NOTE ON CSRF (Cross-Site Request Forgery):
- * The current authentication uses localStorage for token storage and expects Bearer tokens
- * in API request headers. This method is generally less vulnerable to traditional CSRF attacks
- * compared to cookie-based authentication where cookies are sent automatically by the browser.
- *
- * If this application were to switch to cookie-based sessions (especially HttpOnly cookies for security),
- * robust CSRF protection (e.g., using CSRF tokens validated on the server, SameSite cookie attributes)
+ * The current page navigation authentication uses a combination of localStorage and a client-set cookie.
+ * The cookie is primarily for the Next.js middleware.
+ * For API routes expecting `Authorization: Bearer` tokens (like /api/secure-info),
+ * CSRF is less of a concern as these tokens are not sent automatically by browsers.
+ * 
+ * If the application were to switch to rely solely on cookies for session management,
+ * especially HttpOnly cookies set by a backend, then robust CSRF protection
+ * (e.g., using CSRF tokens validated on the server, SameSite cookie attributes)
  * would be essential for all state-changing requests.
  *
- * Next.js
+ * Next.js Server Actions have built-in CSRF protection.
+ */

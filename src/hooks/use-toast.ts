@@ -183,7 +183,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, []) // Corrected dependency array
+  }, []) // Changed dependency array to empty
 
   return {
     ...state,

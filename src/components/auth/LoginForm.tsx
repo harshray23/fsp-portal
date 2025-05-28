@@ -27,8 +27,6 @@ interface LoginFormProps {
   dashboardPath: string;
 }
 
-// Firebase Auth uses email for login. Student ID login would require custom logic.
-// For now, all roles will use email as the identifier.
 const createFormSchema = (role: LoginFormProps['role']) => {
   return z.object({
     email: z.string().email({ message: "Valid email is required." }),
@@ -47,7 +45,6 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
   const formSchema = useMemo(() => createFormSchema(role), [role]);
 
   const defaultValues = useMemo(() => ({
-    // Identifier now represents email for Firebase Auth
     email: role === 'admin' ? "harshray2007@gmail.com" : "", 
     password: role === 'admin' ? "Harsh@2007" : "",
   }), [role]);
@@ -59,17 +56,15 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    // The 'identifier' is now 'values.email' for Firebase
     const result = await login(values.email, values.password, role);
     setIsLoading(false);
 
     if (result.success && result.user) {
-      // Firebase SDK manages session, DashboardLayout will pick it up.
       router.push(dashboardPath); 
     } else {
       toast({
         title: "Login Failed",
-        description: result.error || "Invalid credentials or an unknown error occurred.",
+        description: "Invalid credentials.", // Generic error message
         variant: "destructive",
       });
     }
@@ -82,10 +77,10 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
           <CardContent className="space-y-4 pt-6">
             <FormField
               control={form.control}
-              name="email" // Changed from 'identifier' to 'email'
+              name="email" 
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{role === 'student' ? 'Student Email' : 'Email'}</FormLabel> {/* Label adjusted */}
+                  <FormLabel>{role === 'student' ? 'Student Email' : 'Email'}</FormLabel> 
                   <FormControl>
                     <Input 
                       placeholder={role === 'student' ? 'Enter your registered email' : 'your.email@example.com'} 
@@ -138,4 +133,8 @@ export function LoginForm({ role, dashboardPath }: LoginFormProps) {
                </p>
             )}
           </CardFooter>
-        </form
+        </form>
+      </Form>
+    </Card>
+  );
+}
